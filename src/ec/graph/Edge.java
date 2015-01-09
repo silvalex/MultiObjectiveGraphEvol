@@ -50,14 +50,14 @@ public class Edge {
 
 	@Override
 	public int hashCode() {
-		return fromNode.hashCode() * toNode.hashCode();
+		return (fromNode.getName() + toNode.getName()).hashCode();
 	}
 
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof Edge) {
 			Edge o = (Edge) other;
-			return fromNode.getName().equals(o.fromNode.getName()) && toNode.getName().equals(toNode.getName());
+			return fromNode.getName().equals(o.fromNode.getName()) && toNode.getName().equals(o.toNode.getName());
 		}
 		else
 			return false;

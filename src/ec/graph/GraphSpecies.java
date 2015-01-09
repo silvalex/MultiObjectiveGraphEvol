@@ -7,15 +7,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
-import ec.ECDefaults;
 import ec.EvolutionState;
 import ec.Individual;
 import ec.Species;
 import ec.util.Parameter;
-import ec.util.ParameterDatabase;
 
 public class GraphSpecies extends Species {
 	@Override
@@ -142,13 +139,7 @@ public class GraphSpecies extends Species {
 		}
 		connectCandidateToGraphByInputs(end, connections, newGraph, currentEndInputs, init);
 		init.removeDanglingNodes(newGraph);
-		if (mergedGraph == null) {
-			for (Edge e : newGraph.edgeList) {
-				if (newGraph.nodeMap.get(e.getToNode().getName()) == null) {
-					System.out.println();
-				}
-			}
-		}
+		structureValidator(newGraph);
 		return newGraph;
 	}
 
@@ -226,4 +217,40 @@ public class GraphSpecies extends Species {
 			}
 		}
 	}
+	
+	//==========================================================================================================================
+	//                                                 Debugging Routines
+	//==========================================================================================================================
+	  
+    private void structureValidator( GraphIndividual graph ) {
+        for ( Edge e : graph.edgeList ) {
+            Node fromNode = e.getFromNode();
+
+            boolean isContained = false;
+            for ( Edge outEdge : fromNode.getOutgoingEdgeList() ) {
+                if ( e == outEdge ) {
+                    isContained = true;
+                    break;
+                }
+            }
+
+            if ( !isContained ) {
+                System.out.println( "Outgoing edge for node " + fromNode.getName() + " not detected." );
+            }
+
+            Node toNode = e.getToNode();
+
+            isContained = false;
+            for ( Edge inEdge : toNode.getIncomingEdgeList() ) {
+                if ( e == inEdge ) {
+                    isContained = true;
+                    break;
+                }
+            }
+
+            if ( !isContained ) {
+                System.out.println( "Incoming edge for node " + toNode.getName() + " not detected." );
+            }
+        }
+    }
 }

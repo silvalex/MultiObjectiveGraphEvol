@@ -1,16 +1,9 @@
 package ec.graph;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import ec.BreedingPipeline;
-import ec.ECDefaults;
 import ec.EvolutionState;
 import ec.Individual;
 import ec.util.Parameter;
@@ -94,9 +87,13 @@ public class GraphMergePipeline extends BreedingPipeline {
 
 		for (Edge e : edgesToMerge) {
 			Edge newE = new Edge(e.getIntersect());
-			newE.setFromNode(newG.nodeMap.get(e.getFromNode().getName()));
-			newE.setToNode(newG.nodeMap.get(e.getToNode().getName()));
+			Node fromNode = newG.nodeMap.get(e.getFromNode().getName());
+			newE.setFromNode(fromNode);
+			Node toNode = newG.nodeMap.get(e.getToNode().getName());
+			newE.setToNode(toNode);
 			newG.edgeList.add(newE);
+			fromNode.getOutgoingEdgeList().add(newE);
+			toNode.getIncomingEdgeList().add(newE);
 		}
 		init.removeDanglingNodes(newG);
 		return newG;
