@@ -70,7 +70,7 @@ public class GraphSpecies extends Species {
 							 Set<String> intersect = new HashSet<String>();
 							 intersect.add(input);
 
-							 Edge mapEdge = connections.get(newGraph.nodeMap.get(s.getName()));
+							 Edge mapEdge = connections.get(s.getName());
 							 if (mapEdge == null) {
 								 Edge e = new Edge(intersect);
 								 e.setFromNode(newGraph.nodeMap.get(s.getName()));
@@ -139,7 +139,6 @@ public class GraphSpecies extends Species {
 		}
 		connectCandidateToGraphByInputs(end, connections, newGraph, currentEndInputs, init);
 		init.removeDanglingNodes(newGraph);
-		structureValidator(newGraph);
 		return newGraph;
 	}
 
@@ -217,11 +216,11 @@ public class GraphSpecies extends Species {
 			}
 		}
 	}
-	
+
 	//==========================================================================================================================
 	//                                                 Debugging Routines
 	//==========================================================================================================================
-	  
+
     private void structureValidator( GraphIndividual graph ) {
         for ( Edge e : graph.edgeList ) {
             Node fromNode = e.getFromNode();
