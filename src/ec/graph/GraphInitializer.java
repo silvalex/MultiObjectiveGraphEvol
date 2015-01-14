@@ -4,14 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Random;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -24,7 +22,6 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
 
-import ec.graph.TaxonomyNode;
 import ec.EvolutionState;
 import ec.simple.SimpleInitializer;
 import ec.util.Parameter;
@@ -57,6 +54,8 @@ public class GraphInitializer extends SimpleInitializer {
 	public double w2;
 	public double w3;
 	public double w4;
+	public boolean overlapEnabled;
+	public double overlapPercentage;
 
 	@Override
 	public void setup(EvolutionState state, Parameter base) {
@@ -67,11 +66,15 @@ public class GraphInitializer extends SimpleInitializer {
 		Parameter weight2Param = new Parameter("fitness-weight2");
 		Parameter weight3Param = new Parameter("fitness-weight3");
 		Parameter weight4Param = new Parameter("fitness-weight4");
+		Parameter overlapEnabledParam = new Parameter("overlap-enabled");
+		Parameter overlapPercentageParam = new Parameter("overlap-percentage");
 
 		w1 = state.parameters.getDouble(weight1Param, null);
 		w2 = state.parameters.getDouble(weight2Param, null);
 		w3 = state.parameters.getDouble(weight3Param, null);
 		w4 = state.parameters.getDouble(weight4Param, null);
+	    overlapEnabled = state.parameters.getBoolean( overlapEnabledParam, null, false );
+	    overlapPercentage = state.parameters.getDouble( overlapPercentageParam, null );
 
 		parseWSCServiceFile(state.parameters.getString(servicesParam, null));
 		parseWSCTaskFile(state.parameters.getString(taskParam, null));
