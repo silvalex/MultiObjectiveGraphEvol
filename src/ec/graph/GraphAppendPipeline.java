@@ -1,16 +1,11 @@
 package ec.graph;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 import ec.BreedingPipeline;
-import ec.ECDefaults;
 import ec.EvolutionState;
 import ec.Individual;
 import ec.util.Parameter;
@@ -48,12 +43,13 @@ public class GraphAppendPipeline extends BreedingPipeline {
         // Perform mutation
         for(int q=start;q<n+start;q++) {
             GraphIndividual graph = (GraphIndividual)inds[q];
+            
 
             // Determine whether you want to append a node by the inputs or by the output(s)
             if (init.random.nextBoolean()) {
             	// From the inputs
             	Map<String, Edge> connections = new HashMap<String, Edge>();
-
+            	
 				candidateLoop: for (Node candidate : graph.unused) {
 					candidate = candidate.clone();
 					candidate.setConsidered(false);
@@ -121,15 +117,16 @@ public class GraphAppendPipeline extends BreedingPipeline {
 						}
             		}
             		// If at least one node output got connected, stop
-            		if (!connections.isEmpty())
+            		if (!connections.isEmpty()) {
             			break;
+            		}
             	}
-
+            	
 				// Connect candidate to graph
             	if (candidate != null)
             		((GraphSpecies)graph.species).appendCandidateToGraphByOutputs(candidate, connections, graph);
             }
-
+        
 
 
             graph.evaluated=false;

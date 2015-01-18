@@ -56,9 +56,12 @@ public class GraphInitializer extends SimpleInitializer {
 	public double w4;
 	public boolean overlapEnabled;
 	public double overlapPercentage;
+	
+//	public Stopwatch watch = new Stopwatch();
 
 	@Override
 	public void setup(EvolutionState state, Parameter base) {
+//	    watch.start();
 		Parameter servicesParam = new Parameter("composition-services");
 		Parameter taskParam = new Parameter("composition-task");
 		Parameter taxonomyParam = new Parameter("composition-taxonomy");
@@ -241,9 +244,11 @@ public class GraphInitializer extends SimpleInitializer {
 	private void removeDangling(Node n, GraphIndividual graph) {
 	    if (n.getOutgoingEdgeList().isEmpty()) {
 	        graph.nodeMap.remove( n.getName() );
+	        graph.considerableNodeMap.remove( n.getName() );
 	        for (Edge e : n.getIncomingEdgeList()) {
 	            e.getFromNode().getOutgoingEdgeList().remove( e );
 	            graph.edgeList.remove( e );
+	            graph.considerableEdgeList.remove( e );
 	            removeDangling(e.getFromNode(), graph);
 	        }
 	    }

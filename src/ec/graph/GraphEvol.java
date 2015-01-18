@@ -2,10 +2,11 @@ package ec.graph;
 import java.util.HashMap;
 import java.util.Map;
 
-import ec.*;
-import ec.simple.*;
-import ec.util.*;
-import ec.vector.*;
+import ec.EvolutionState;
+import ec.Individual;
+import ec.Problem;
+import ec.simple.SimpleFitness;
+import ec.simple.SimpleProblemForm;
 
 public class GraphEvol extends Problem implements SimpleProblemForm {
 
@@ -99,7 +100,9 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
 		// Step 2: relax edges repeatedly
 		for (int i = 1; i < g.considerableNodeMap.size(); i++) {
 			for (Edge e : g.considerableEdgeList) {
-				if ((distance.get(e.getFromNode().getName()) - e.getToNode().getQos()[GraphInitializer.TIME]) < distance.get(e.getToNode().getName())) {
+				if ((distance.get(e.getFromNode().getName()) - 
+				        e.getToNode().getQos()[GraphInitializer.TIME]) 
+				        < distance.get(e.getToNode().getName())) {
 					distance.put(e.getToNode().getName(), (distance.get(e.getFromNode().getName()) - e.getToNode().getQos()[GraphInitializer.TIME]));
 					predecessor.put(e.getToNode().getName(), e.getFromNode());
 				}
@@ -117,4 +120,10 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
 
 		return totalTime;
 	}
+	
+//	@Override
+//	public void finishEvaluating(EvolutionState state, int thread) {
+//	    if (((GraphInitializer)state.initializer).watch.getElapsedTime() >= 6000)
+//	        System.exit( 0 );
+//	}
 }

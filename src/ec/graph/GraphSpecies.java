@@ -49,97 +49,107 @@ public class GraphSpecies extends Species {
 			addToCandidateList(start, seenNodes, relevant, candidateList, init);
 
 		Collections.shuffle(candidateList, init.random);
-
-		// While end cannot be connected to graph
-		while(!currentEndInputs.containsAll(end.getInputs())) {
-
-			// Select node
-			int index;
-
-			candidateLoop:
-			for (index = 0; index < candidateList.size(); index++) {
-				Node candidate = candidateList.get(index).clone();
-				// For all of the candidate inputs, check that there is a service already in the graph
-				// that can satisfy it
-				connections.clear();
-
-				for (String input : candidate.getInputs()) {
-					boolean found = false;
-					 for (Node s : init.taxonomyMap.get(input).servicesWithOutput) {
-						 if (newGraph.nodeMap.containsKey(s.getName())) {
-							 Set<String> intersect = new HashSet<String>();
-							 intersect.add(input);
-
-							 Edge mapEdge = connections.get(s.getName());
-							 if (mapEdge == null) {
-								 Edge e = new Edge(intersect);
-								 e.setFromNode(newGraph.nodeMap.get(s.getName()));
-								 e.setToNode(candidate);
-								 connections.put(e.getFromNode().getName(), e);
-							 }
-							 else
-								 mapEdge.getIntersect().addAll(intersect);
-
-							 found = true;
-							 break;
-						 }
-					 }
-					 // If that input cannot be satisfied, move on to another candidate node to connect
-					 if (!found) {
-						 // Move on to another candidate
-						 continue candidateLoop;
-					 }
-				}
-
-				// Connect candidate to graph, adding its reachable services to the candidate list
-				connectCandidateToGraphByInputs(candidate, connections, newGraph, currentEndInputs, init);
-				if (mergedGraph != null)
-					addToCandidateListFromEdges(candidate, mergedGraph, seenNodes, candidateList);
-				else
-					addToCandidateList(candidate, seenNodes, relevant, candidateList, init);
-
-				break;
-			}
-
-			candidateList.remove(index);
-			Collections.shuffle(candidateList, init.random);
-		}
-
-		// Connect end node to graph
-		connections.clear();
-		Iterator<Node> it = newGraph.nodeMap.values().iterator();
-		Node s;
-
-		while (!currentEndInputs.isEmpty() && it.hasNext()) {
-			s = it.next();
-
-			Set<String> intersection = new HashSet<String>();
-
-			for (String o : s.getOutputs()) {
-
-				Set<String> endNodeInputs = init.taxonomyMap.get(o).endNodeInputs;
-				if (!endNodeInputs.isEmpty()) {
-
-					for (String i : endNodeInputs) {
-						if (currentEndInputs.contains(i)) {
-							intersection.add(i);
-							currentEndInputs.remove(i);
-						}
-					}
-
-				}
-			}
-
-			if (!intersection.isEmpty()) {
-				Edge e = new Edge(intersection);
-				e.setFromNode(s);
-				e.setToNode(end);
-				connections.put(e.getFromNode().getName(), e);
-			}
-		}
-		connectCandidateToGraphByInputs(end, connections, newGraph, currentEndInputs, init);
-		init.removeDanglingNodes(newGraph);
+		
+		finishConstructingGraph(currentEndInputs, end, candidateList, connections, init, newGraph, mergedGraph, seenNodes, relevant);
+        
 		return newGraph;
+	}
+		
+	public void finishConstructingGraph(Set<String> currentEndInputs, Node end, List<Node> candidateList, Map<String,Edge> connections,
+	        GraphInitializer init, GraphIndividual newGraph, GraphIndividual mergedGraph, Set<Node> seenNodes, Set<Node> relevant) {
+	 // While end cannot be connected to graph
+        while(!currentEndInputs.containsAll(end.getInputs())) {
+
+            // Select node
+            int index;
+
+            candidateLoop:
+            for (index = 0; index < candidateList.size(); index++) {
+                Node candidate = candidateList.get(index).clone();
+                // For all of the candidate inputs, check that there is a service already in the graph
+                // that can satisfy it
+                connections.clear();
+
+                for (String input : candidate.getInputs()) {
+                    boolean found = false;
+                    //Collections.shuffle( init.taxonomyMap.get( input ).servicesWithOutput, init.random ); //XXX
+                     for (Node s : init.taxonomyMap.get(input).servicesWithOutput) {
+                         if (newGraph.nodeMap.containsKey(s.getName())) {
+                             Set<String> intersect = new HashSet<String>();
+                             intersect.add(input);
+
+                             Edge mapEdge = connections.get(s.getName());
+                             if (mapEdge == null) {
+                                 Edge e = new Edge(intersect);
+                                 e.setFromNode(newGraph.nodeMap.get(s.getName()));
+                                 e.setToNode(candidate);
+                                 connections.put(e.getFromNode().getName(), e);
+                             }
+                             else
+                                 mapEdge.getIntersect().addAll(intersect);
+
+                             found = true;
+                             break;
+                         }
+                     }
+                     // If that input cannot be satisfied, move on to another candidate node to connect
+                     if (!found) {
+                         // Move on to another candidate
+                         continue candidateLoop;
+                     }
+                }
+
+                // Connect candidate to graph, adding its reachable services to the candidate list
+                connectCandidateToGraphByInputs(candidate, connections, newGraph, currentEndInputs, init);
+                if (mergedGraph != null)
+                    addToCandidateListFromEdges(candidate, mergedGraph, seenNodes, candidateList);
+                else
+                    addToCandidateList(candidate, seenNodes, relevant, candidateList, init);
+
+                break;
+            }
+
+            candidateList.remove(index);
+            Collections.shuffle(candidateList, init.random);
+        }
+
+        // Connect end node to graph
+        connections.clear();
+        Iterator<Node> it = newGraph.nodeMap.values().iterator();
+        Node s;
+
+        while (!currentEndInputs.isEmpty() && it.hasNext()) {
+            s = it.next();
+
+            Set<String> intersection = new HashSet<String>();
+            
+            for (String o : s.getOutputs()) {
+
+                Set<String> endNodeInputs = init.taxonomyMap.get(o).endNodeInputs;
+                if (!endNodeInputs.isEmpty()) {
+
+                    for (String i : endNodeInputs) {
+                        if (currentEndInputs.contains(i)) {
+                            intersection.add(i);
+                            currentEndInputs.remove(i);
+                        }
+                    }
+
+                }
+            }
+
+            if (!intersection.isEmpty()) {
+                Edge e = new Edge(intersection);
+                e.setFromNode(s);
+                e.setToNode(end);
+                connections.put(e.getFromNode().getName(), e);
+            }
+        }
+        connectCandidateToGraphByInputs(end, connections, newGraph, currentEndInputs, init);
+        init.removeDanglingNodes(newGraph);
+        if (newGraph.nodeMap.size() == 1) {
+            int ieee = 1;
+        }
 	}
 
 	private void addToCandidateListFromEdges (Node n, GraphIndividual mergedGraph, Set<Node> seenNode, List<Node> candidateList) {
@@ -158,6 +168,7 @@ public class GraphSpecies extends Species {
 	}
 
 	public void connectCandidateToGraphByInputs(Node candidate, Map<String,Edge> connections, GraphIndividual graph, Set<String> currentEndInputs, GraphInitializer init) {
+	    
 		graph.nodeMap.put(candidate.getName(), candidate);
 		graph.considerableNodeMap.put(candidate.getName(), candidate);
 		graph.edgeList.addAll(connections.values());
@@ -198,7 +209,7 @@ public class GraphSpecies extends Species {
 		graph.unused.remove(candidate);
 	}
 
-	private void addToCandidateList(Node n, Set<Node> seenNode, Set<Node> relevant, List<Node> candidateList, GraphInitializer init) {
+	public void addToCandidateList(Node n, Set<Node> seenNode, Set<Node> relevant, List<Node> candidateList, GraphInitializer init) {
 		seenNode.add(n);
 		List<TaxonomyNode> taxonomyOutputs;
 		if (n.getName().equals("start"))
@@ -221,9 +232,10 @@ public class GraphSpecies extends Species {
 	//                                                 Debugging Routines
 	//==========================================================================================================================
 
-    private void structureValidator( GraphIndividual graph ) {
+    public void structureValidator( GraphIndividual graph ) {
         for ( Edge e : graph.edgeList ) {
-            Node fromNode = e.getFromNode();
+            //Node fromNode = e.getFromNode();
+            Node fromNode = graph.nodeMap.get( e.getFromNode().getName());
 
             boolean isContained = false;
             for ( Edge outEdge : fromNode.getOutgoingEdgeList() ) {
@@ -237,7 +249,8 @@ public class GraphSpecies extends Species {
                 System.out.println( "Outgoing edge for node " + fromNode.getName() + " not detected." );
             }
 
-            Node toNode = e.getToNode();
+            //Node toNode = e.getToNode();
+            Node toNode = graph.nodeMap.get( e.getToNode().getName());
 
             isContained = false;
             for ( Edge inEdge : toNode.getIncomingEdgeList() ) {
@@ -251,5 +264,39 @@ public class GraphSpecies extends Species {
                 System.out.println( "Incoming edge for node " + toNode.getName() + " not detected." );
             }
         }
+        System.out.println("************************************");
+    }
+    
+    public void structureValidator2( GraphIndividual graph ) {
+        for ( Edge e : graph.considerableEdgeList ) {
+            Node fromNode = graph.considerableNodeMap.get( e.getFromNode().getName());
+
+            boolean isContained = false;
+            for ( Edge outEdge : fromNode.getOutgoingEdgeList() ) {
+                if ( e == outEdge ) {
+                    isContained = true;
+                    break;
+                }
+            }
+
+            if ( !isContained ) {
+                System.out.println( "Considerable: Outgoing edge for node " + fromNode.getName() + " not detected." );
+            }
+
+            Node toNode = graph.considerableNodeMap.get( e.getToNode().getName());
+
+            isContained = false;
+            for ( Edge inEdge : toNode.getIncomingEdgeList() ) {
+                if ( e == inEdge ) {
+                    isContained = true;
+                    break;
+                }
+            }
+
+            if ( !isContained ) {
+                System.out.println( "Considerable: Incoming edge for node " + toNode.getName() + " not detected." );
+            }
+        }
+        System.out.println("-----------------------------------------------");
     }
 }
