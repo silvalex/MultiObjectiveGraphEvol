@@ -7,6 +7,7 @@ import ec.Individual;
 import ec.Problem;
 import ec.simple.SimpleFitness;
 import ec.simple.SimpleProblemForm;
+import ec.util.Log;
 
 public class GraphEvol extends Problem implements SimpleProblemForm {
 
@@ -49,6 +50,33 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
 
         ind2.evaluated = true;
 	}
+
+//	@Override
+//    public void evaluate(final EvolutionState state, final Individual ind, final int subpopulation, final int threadnum) {
+//		GraphInitializer init = (GraphInitializer) state.initializer;
+//
+//		if (ind.evaluated) return;   //don't evaluate the individual if it's already evaluated
+//        if (!(ind instanceof GraphIndividual))
+//            state.output.fatal("Whoa!  It's not a GraphIndividual!!!",null);
+//        GraphIndividual ind2 = (GraphIndividual)ind;
+//
+//        // Calculate longest time
+//        int runPath = findLongestPath2(ind2) -1;
+//        int numAtomicProcess = (ind2.considerableNodeMap.size() - 2);
+//        boolean isIdeal = runPath == init.idealPathLength && numAtomicProcess == init.idealNumAtomic;
+//
+//        double fitness = 0.34 * 2.0 + 0.33 * (1.0 / runPath) + 0.33 * (1.0/ numAtomicProcess);
+//
+//        ((SimpleFitness)ind2.fitness).setFitness(state,
+//                // ...the fitness...
+//                fitness,
+//                ///... is the individual ideal?  Indicate here...
+//                isIdeal);
+//
+//        ind2.evaluated = true;
+//	}
+
+
 
 	private double normaliseAvailability(double availability, GraphInitializer init) {
 		if (init.maxAvailability - init.minAvailability == 0.0)
@@ -100,8 +128,8 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
 		// Step 2: relax edges repeatedly
 		for (int i = 1; i < g.considerableNodeMap.size(); i++) {
 			for (Edge e : g.considerableEdgeList) {
-				if ((distance.get(e.getFromNode().getName()) - 
-				        e.getToNode().getQos()[GraphInitializer.TIME]) 
+				if ((distance.get(e.getFromNode().getName()) -
+				        e.getToNode().getQos()[GraphInitializer.TIME])
 				        < distance.get(e.getToNode().getName())) {
 					distance.put(e.getToNode().getName(), (distance.get(e.getFromNode().getName()) - e.getToNode().getQos()[GraphInitializer.TIME]));
 					predecessor.put(e.getToNode().getName(), e.getFromNode());
@@ -120,10 +148,60 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
 
 		return totalTime;
 	}
-	
+
+	/**
+	 * Uses the Bellman-Ford algorithm with negative weights to find the longest
+	 * path in an acyclic directed graph.
+	 *
+	 * @param g
+	 * @return list of edges composing longest path
+	 */
+	private int findLongestPath2(GraphIndividual g) {
+		Map<String, Integer> distance = new HashMap<String, Integer>();
+		Map<String, Node> predecessor = new HashMap<String, Node>();
+
+		// Step 1: initialize graph
+		for (Node node : g.considerableNodeMap.values()) {
+			if (node.getName().equals("start"))
+				distance.put(node.getName(), 0);
+			else
+				distance.put(node.getName(), Integer.MAX_VALUE);
+		}
+
+		// Step 2: relax edges repeatedly
+		for (int i = 1; i < g.considerableNodeMap.size(); i++) {
+			for (Edge e : g.considerableEdgeList) {
+				if ((distance.get(e.getFromNode().getName()) - 1)
+				        < distance.get(e.getToNode().getName())) {
+					distance.put(e.getToNode().getName(), (distance.get(e.getFromNode().getName()) - 1));
+					predecessor.put(e.getToNode().getName(), e.getFromNode());
+				}
+			}
+		}
+
+		// Now retrieve total cost
+		Node pre = predecessor.get("end");
+		int totalTime = 0;
+
+		while (pre != null) {
+			totalTime += 1;
+			pre = predecessor.get(pre.getName());
+		}
+
+		return totalTime;
+	}
+
 //	@Override
-//	public void finishEvaluating(EvolutionState state, int thread) {
-//	    if (((GraphInitializer)state.initializer).watch.getElapsedTime() >= 6000)
+//	public void describe(EvolutionState state, Individual ind, int subpopulation, int thread, int log) {
+//		Log l = state.output.getLog(log);
+//		GraphIndividual graph = (GraphIndividual) ind;
+//
+//		System.out.println(String.format("runPath= %d #atomicProcess= %d\n", findLongestPath2(graph) - 1, graph.considerableNodeMap.size() - 2));
+//		l.writer.append(String.format("runPath= %d #atomicProcess= %d\n", findLongestPath2(graph) - 1, graph.considerableNodeMap.size() - 2));
+//		l.writer.flush();
+
+//		ec.util.Output
+//	    if (thread >= 6000)
 //	        System.exit( 0 );
 //	}
 }

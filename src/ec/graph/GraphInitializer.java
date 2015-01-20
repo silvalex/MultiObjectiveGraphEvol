@@ -56,7 +56,9 @@ public class GraphInitializer extends SimpleInitializer {
 	public double w4;
 	public boolean overlapEnabled;
 	public double overlapPercentage;
-	
+	public int idealPathLength;
+	public int idealNumAtomic;
+
 //	public Stopwatch watch = new Stopwatch();
 
 	@Override
@@ -71,6 +73,8 @@ public class GraphInitializer extends SimpleInitializer {
 		Parameter weight4Param = new Parameter("fitness-weight4");
 		Parameter overlapEnabledParam = new Parameter("overlap-enabled");
 		Parameter overlapPercentageParam = new Parameter("overlap-percentage");
+		Parameter idealPathLengthParam = new Parameter("ideal-path-length");
+		Parameter idealNumAtomicParam = new Parameter("ideal-num-atomic");
 
 		w1 = state.parameters.getDouble(weight1Param, null);
 		w2 = state.parameters.getDouble(weight2Param, null);
@@ -78,6 +82,8 @@ public class GraphInitializer extends SimpleInitializer {
 		w4 = state.parameters.getDouble(weight4Param, null);
 	    overlapEnabled = state.parameters.getBoolean( overlapEnabledParam, null, false );
 	    overlapPercentage = state.parameters.getDouble( overlapPercentageParam, null );
+		idealPathLength = state.parameters.getInt(idealPathLengthParam, null);
+		idealNumAtomic = state.parameters.getInt(idealNumAtomicParam, null);
 
 		parseWSCServiceFile(state.parameters.getString(servicesParam, null));
 		parseWSCTaskFile(state.parameters.getString(taskParam, null));

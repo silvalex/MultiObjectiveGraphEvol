@@ -49,12 +49,12 @@ public class GraphSpecies extends Species {
 			addToCandidateList(start, seenNodes, relevant, candidateList, init);
 
 		Collections.shuffle(candidateList, init.random);
-		
+
 		finishConstructingGraph(currentEndInputs, end, candidateList, connections, init, newGraph, mergedGraph, seenNodes, relevant);
-        
+
 		return newGraph;
 	}
-		
+
 	public void finishConstructingGraph(Set<String> currentEndInputs, Node end, List<Node> candidateList, Map<String,Edge> connections,
 	        GraphInitializer init, GraphIndividual newGraph, GraphIndividual mergedGraph, Set<Node> seenNodes, Set<Node> relevant) {
 	 // While end cannot be connected to graph
@@ -122,7 +122,7 @@ public class GraphSpecies extends Species {
             s = it.next();
 
             Set<String> intersection = new HashSet<String>();
-            
+
             for (String o : s.getOutputs()) {
 
                 Set<String> endNodeInputs = init.taxonomyMap.get(o).endNodeInputs;
@@ -168,7 +168,7 @@ public class GraphSpecies extends Species {
 	}
 
 	public void connectCandidateToGraphByInputs(Node candidate, Map<String,Edge> connections, GraphIndividual graph, Set<String> currentEndInputs, GraphInitializer init) {
-	    
+
 		graph.nodeMap.put(candidate.getName(), candidate);
 		graph.considerableNodeMap.put(candidate.getName(), candidate);
 		graph.edgeList.addAll(connections.values());
@@ -266,7 +266,7 @@ public class GraphSpecies extends Species {
         }
         System.out.println("************************************");
     }
-    
+
     public void structureValidator2( GraphIndividual graph ) {
         for ( Edge e : graph.considerableEdgeList ) {
             Node fromNode = graph.considerableNodeMap.get( e.getFromNode().getName());
