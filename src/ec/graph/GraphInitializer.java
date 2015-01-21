@@ -111,7 +111,8 @@ public class GraphInitializer extends SimpleInitializer {
 
 		populateTaxonomyTree();
 		relevant = getRelevantServices(serviceMap, taskInput, taskOutput);
-		calculateNormalisationBounds(relevant);
+		if(!runningOwls)
+		    calculateNormalisationBounds(relevant);
 	}
 
 	/**
