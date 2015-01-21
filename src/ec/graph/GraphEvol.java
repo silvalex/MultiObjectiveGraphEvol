@@ -7,14 +7,21 @@ import ec.Individual;
 import ec.Problem;
 import ec.simple.SimpleFitness;
 import ec.simple.SimpleProblemForm;
-import ec.util.Log;
 
 public class GraphEvol extends Problem implements SimpleProblemForm {
 
 	@Override
-    public void evaluate(final EvolutionState state, final Individual ind, final int subpopulation, final int threadnum) {
-		GraphInitializer init = (GraphInitializer) state.initializer;
-
+	public void evaluate(final EvolutionState state, final Individual ind, final int subpopulation, final int threadnum) {
+	    GraphInitializer init = (GraphInitializer) state.initializer;
+	    if (init.runningOwls) {
+	        evaluateOwls(init, state, ind, subpopulation, threadnum);
+	    }
+	    else {
+	        evaluateQoS(init, state, ind, subpopulation, threadnum);
+	    }
+	}
+	
+    public void evaluateQoS(final GraphInitializer init, final EvolutionState state, final Individual ind, final int subpopulation, final int threadnum) {
 		if (ind.evaluated) return;   //don't evaluate the individual if it's already evaluated
         if (!(ind instanceof GraphIndividual))
             state.output.fatal("Whoa!  It's not a GraphIndividual!!!",null);
@@ -51,30 +58,29 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
         ind2.evaluated = true;
 	}
 
-//	@Override
-//    public void evaluate(final EvolutionState state, final Individual ind, final int subpopulation, final int threadnum) {
-//		GraphInitializer init = (GraphInitializer) state.initializer;
-//
-//		if (ind.evaluated) return;   //don't evaluate the individual if it's already evaluated
-//        if (!(ind instanceof GraphIndividual))
-//            state.output.fatal("Whoa!  It's not a GraphIndividual!!!",null);
-//        GraphIndividual ind2 = (GraphIndividual)ind;
-//
-//        // Calculate longest time
-//        int runPath = findLongestPath2(ind2) -1;
-//        int numAtomicProcess = (ind2.considerableNodeMap.size() - 2);
-//        boolean isIdeal = runPath == init.idealPathLength && numAtomicProcess == init.idealNumAtomic;
-//
-//        double fitness = 0.34 * 2.0 + 0.33 * (1.0 / runPath) + 0.33 * (1.0/ numAtomicProcess);
-//
-//        ((SimpleFitness)ind2.fitness).setFitness(state,
-//                // ...the fitness...
-//                fitness,
-//                ///... is the individual ideal?  Indicate here...
-//                isIdeal);
-//
-//        ind2.evaluated = true;
-//	}
+    public void evaluateOwls(final GraphInitializer init, final EvolutionState state, final Individual ind, final int subpopulation, final int threadnum) {
+
+		if (ind.evaluated) return;   //don't evaluate the individual if it's already evaluated
+        if (!(ind instanceof GraphIndividual))
+            state.output.fatal("Whoa!  It's not a GraphIndividual!!!",null);
+        GraphIndividual ind2 = (GraphIndividual)ind;
+
+        // Calculate longest time
+        int runPath = findLongestPath2(ind2) - 1;
+        ind2.longestPathLength = runPath;
+        int numAtomicProcess = (ind2.considerableNodeMap.size() - 2);
+        boolean isIdeal = runPath == init.idealPathLength && numAtomicProcess == init.idealNumAtomic;
+        
+        double fitness = (0.45 * 2.0) + (0.05 * (1.0 / runPath)) + (0.05 * (1.0/ numAtomicProcess));
+
+        ((SimpleFitness)ind2.fitness).setFitness(state,
+                // ...the fitness...
+                fitness,
+                ///... is the individual ideal?  Indicate here...
+                isIdeal);
+
+        ind2.evaluated = true;
+	}
 
 
 

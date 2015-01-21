@@ -55,6 +55,8 @@ public class GraphInitializer extends SimpleInitializer {
 	public double w3;
 	public double w4;
 	public boolean overlapEnabled;
+	public boolean runningOwls;
+	public boolean findConcepts;
 	public double overlapPercentage;
 	public int idealPathLength;
 	public int idealNumAtomic;
@@ -75,20 +77,25 @@ public class GraphInitializer extends SimpleInitializer {
 		Parameter overlapPercentageParam = new Parameter("overlap-percentage");
 		Parameter idealPathLengthParam = new Parameter("ideal-path-length");
 		Parameter idealNumAtomicParam = new Parameter("ideal-num-atomic");
+		Parameter runningOwlsParam = new Parameter("running-owls");
+		Parameter findConceptsParam = new Parameter("find-concepts");
 
 		w1 = state.parameters.getDouble(weight1Param, null);
 		w2 = state.parameters.getDouble(weight2Param, null);
 		w3 = state.parameters.getDouble(weight3Param, null);
 		w4 = state.parameters.getDouble(weight4Param, null);
 	    overlapEnabled = state.parameters.getBoolean( overlapEnabledParam, null, false );
+	    runningOwls = state.parameters.getBoolean( runningOwlsParam, null, false );
 	    overlapPercentage = state.parameters.getDouble( overlapPercentageParam, null );
 		idealPathLength = state.parameters.getInt(idealPathLengthParam, null);
 		idealNumAtomic = state.parameters.getInt(idealNumAtomicParam, null);
+		findConcepts = state.parameters.getBoolean( findConceptsParam, null, false );
 
 		parseWSCServiceFile(state.parameters.getString(servicesParam, null));
 		parseWSCTaskFile(state.parameters.getString(taskParam, null));
 		parseWSCTaxonomyFile(state.parameters.getString(taxonomyParam, null));
-		findConceptsForInstances();
+		if (findConcepts)
+		    findConceptsForInstances();
 
 		random = new GraphRandom(state.random[0]);
 
@@ -141,8 +148,9 @@ public class GraphInitializer extends SimpleInitializer {
 	 * nodes in the tree.
 	 */
 	private void populateTaxonomyTree() {
-		for (Node s: serviceMap.values())
+		for (Node s: serviceMap.values()) {
 			addServiceToTaxonomyTree(s);
+		}
 
 		// Add input and output nodes
 		addServiceToTaxonomyTree(startNode);
@@ -151,35 +159,71 @@ public class GraphInitializer extends SimpleInitializer {
 
 	private void addServiceToTaxonomyTree(Node s) {
 		// Populate outputs
+	    Set<TaxonomyNode> seenConceptsOutput = new HashSet<TaxonomyNode>();
 		for (String outputVal : s.getOutputs()) {
 			TaxonomyNode n = taxonomyMap.get(outputVal);
-			n.servicesWithOutput.add(s);
+//			n.servicesWithOutput.add(s);
 			s.getTaxonomyOutputs().add(n);
 
 			// Also add output to all parent nodes
-			TaxonomyNode current = n.parent;
-			while (current != null) {
-				current.servicesWithOutput.add(s);
-				s.getTaxonomyOutputs().add(current);
-				current = current.parent;
+			Queue<TaxonomyNode> queue = new LinkedList<TaxonomyNode>();
+//			for (TaxonomyNode parent : n.parents) {
+//			    if (!seenConceptsOutput.contains( parent ))
+//			        queue.add( parent );
+//			}
+			queue.add( n );
+			
+			while (!queue.isEmpty()) {
+			    TaxonomyNode current = queue.poll();
+		        seenConceptsOutput.add( current );
+		        current.servicesWithOutput.add(s);
+		        for (TaxonomyNode parent : current.parents) {
+		            if (!seenConceptsOutput.contains( parent )) {
+		                queue.add(parent);
+		                seenConceptsOutput.add(parent);
+		            }
+		            else {
+		                int i = 0;
+		            }
+		        }
+		        if (queue.size() > 100000) { // XXX
+		           int i = 0;
+		        }
 			}
-
 		}
 		// Populate inputs
+		Set<TaxonomyNode> seenConceptsInput = new HashSet<TaxonomyNode>();
 		for (String inputVal : s.getInputs()) {
 			TaxonomyNode n = taxonomyMap.get(inputVal);
-			n.servicesWithInput.add(s);
+			//n.servicesWithInput.add(s);
 
 			// Also add input to all children nodes
 			Queue<TaxonomyNode> queue = new LinkedList<TaxonomyNode>();
-			queue.addAll(n.children);
-
+//			for (TaxonomyNode child: n.children) {
+//			    if (!seenConceptsInput.contains( child ))
+//			        queue.add(child);
+//			}
+			queue.add( n );
+			
 			while(!queue.isEmpty()) {
 				TaxonomyNode current = queue.poll();
-				current.servicesWithInput.add(s);
-				queue.addAll(current.children);
+				seenConceptsInput.add( current );
+			    current.servicesWithInput.add(s);
+			    for (TaxonomyNode child : current.children) {
+			        if (!seenConceptsInput.contains( child )) {
+			            queue.add(child);
+			            seenConceptsInput.add( child );
+			        }
+			        else {
+			            int i = 0;
+			        }
+			    }
+				if (queue.size() > 10000) { //XXX
+				    int i = 0;
+				}
 			}
 		}
+		return;
 	}
 
 	private void addEndNodeToTaxonomyTree() {
@@ -208,13 +252,13 @@ public class GraphInitializer extends SimpleInitializer {
 		Set<String> temp = new HashSet<String>();
 
 		for (String s : taskInput)
-			temp.add(taxonomyMap.get(s).parent.value);
+			temp.add(taxonomyMap.get(s).parents.get(0).value);
 		taskInput.clear();
 		taskInput.addAll(temp);
 
 		temp.clear();
 		for (String s : taskOutput)
-				temp.add(taxonomyMap.get(s).parent.value);
+				temp.add(taxonomyMap.get(s).parents.get(0).value);
 		taskOutput.clear();
 		taskOutput.addAll(temp);
 
@@ -222,14 +266,14 @@ public class GraphInitializer extends SimpleInitializer {
 			temp.clear();
 			Set<String> inputs = s.getInputs();
 			for (String i : inputs)
-				temp.add(taxonomyMap.get(i).parent.value);
+				temp.add(taxonomyMap.get(i).parents.get(0).value);
 			inputs.clear();
 			inputs.addAll(temp);
 
 			temp.clear();
 			Set<String> outputs = s.getOutputs();
 			for (String o : outputs)
-				temp.add(taxonomyMap.get(o).parent.value);
+				temp.add(taxonomyMap.get(o).parents.get(0).value);
 			outputs.clear();
 			outputs.addAll(temp);
 		}
@@ -372,10 +416,12 @@ public class GraphInitializer extends SimpleInitializer {
         		Element eElement = (Element) nNode;
 
         		String name = eElement.getAttribute("name");
-				qos[TIME] = Double.valueOf(eElement.getAttribute("Res"));
-				qos[COST] = Double.valueOf(eElement.getAttribute("Pri"));
-				qos[AVAILABILITY] = Double.valueOf(eElement.getAttribute("Ava"));
-				qos[RELIABILITY] = Double.valueOf(eElement.getAttribute("Rel"));
+        		if (!runningOwls) {
+        		    qos[TIME] = Double.valueOf(eElement.getAttribute("Res"));
+        		    qos[COST] = Double.valueOf(eElement.getAttribute("Pri"));
+        		    qos[AVAILABILITY] = Double.valueOf(eElement.getAttribute("Ava"));
+        		    qos[RELIABILITY] = Double.valueOf(eElement.getAttribute("Rel"));
+        		}
 
 				// Get inputs
 				org.w3c.dom.Node inputNode = eElement.getElementsByTagName("inputs").item(0);
@@ -467,9 +513,9 @@ public class GraphInitializer extends SimpleInitializer {
 	    	DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 	    	DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 	    	Document doc = dBuilder.parse(fXmlFile);
-	    	Element taxonomy = (Element) doc.getChildNodes().item(0);
+	    	NodeList taxonomyRoots = doc.getChildNodes();
 
-	    	processTaxonomyChildren(null, taxonomy.getChildNodes());
+	    	processTaxonomyChildren(null, taxonomyRoots);
 		}
 
 		catch (ParserConfigurationException e) {
@@ -496,16 +542,21 @@ public class GraphInitializer extends SimpleInitializer {
 
 				if (!(ch instanceof Text)) {
 					Element currNode = (Element) nodes.item(i);
-
-					TaxonomyNode taxNode = new TaxonomyNode(currNode.getAttribute("name"), parent);
-					taxonomyMap.put(taxNode.value, taxNode);
-					if (parent != null)
-						parent.children.add(taxNode);
-
-					NodeList children = currNode.getChildNodes();
-					processTaxonomyChildren(taxNode, children);
+					String value = currNode.getAttribute("name");
+    					TaxonomyNode taxNode = taxonomyMap.get( value );
+    					if (taxNode == null) {
+    					    taxNode = new TaxonomyNode(value);
+    					    taxonomyMap.put( value, taxNode );
+    					}
+    					if (parent != null) {
+    					    taxNode.parents.add(parent);
+    						parent.children.add(taxNode);
+    					}
+    
+    					NodeList children = currNode.getChildNodes();
+    					processTaxonomyChildren(taxNode, children);
+					}
 				}
-			}
 		}
 	}
 

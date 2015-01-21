@@ -1,18 +1,12 @@
 package ec.graph;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import ec.ECDefaults;
-import ec.EvolutionState;
-import ec.Fitness;
 import ec.Individual;
-import ec.Prototype;
-import ec.simple.SimpleDefaults;
 import ec.simple.SimpleFitness;
 import ec.util.Parameter;
 
@@ -23,6 +17,7 @@ public class GraphIndividual extends Individual {
 	public List<Edge> edgeList = new ArrayList<Edge>();
 	public List<Edge> considerableEdgeList = new ArrayList<Edge>();
 	public Set<Node> unused;
+	public int longestPathLength;
 
 	public GraphIndividual(){
 		super();

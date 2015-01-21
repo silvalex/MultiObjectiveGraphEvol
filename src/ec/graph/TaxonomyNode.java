@@ -12,20 +12,15 @@ import java.util.Set;
  * @author sawczualex
  */
 public class TaxonomyNode {
-	public TaxonomyNode parent;
 	public Set<String> endNodeInputs = new HashSet<String>();
 	public List<Node> servicesWithOutput = new ArrayList<Node>();
 	public List<Node> servicesWithInput = new ArrayList<Node>();
 	public String value;
+	public List<TaxonomyNode> parents = new ArrayList<TaxonomyNode>();
 	public List<TaxonomyNode> children = new ArrayList<TaxonomyNode>();
 
 	public TaxonomyNode(String value) {
 		this.value = value;
-	}
-
-	public TaxonomyNode(String value, TaxonomyNode parent) {
-		this.value = value;
-		this.parent = parent;
 	}
 
 	/**
@@ -41,9 +36,29 @@ public class TaxonomyNode {
 	}
 
     private void _getSubsumedConcepts(Set<String> concepts) {
-        concepts.add(value);
-        for (TaxonomyNode child : children) {
-            child._getSubsumedConcepts(concepts);
+        if (!concepts.contains( value )) {
+            concepts.add(value);
+            for (TaxonomyNode child : children) {
+                child._getSubsumedConcepts(concepts);
+            }
         }
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof TaxonomyNode) {
+            return ((TaxonomyNode)other).value.equals( value );
+        }
+        return false;
+    }
+    
+    @Override
+    public int hashCode() {
+        return value.hashCode();
+    }
+    
+    @Override
+    public String toString() {
+        return value;
     }
 }
