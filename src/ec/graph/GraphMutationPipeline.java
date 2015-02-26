@@ -48,7 +48,7 @@ public class GraphMutationPipeline extends BreedingPipeline {
             GraphIndividual graph = (GraphIndividual)inds[q];
             GraphSpecies species = (GraphSpecies) graph.species;
             Object[] nodes = graph.nodeMap.values().toArray();
-            
+
             // Select node from which to perform mutation
             Node selected = null;
             while (selected == null) {
@@ -57,23 +57,23 @@ public class GraphMutationPipeline extends BreedingPipeline {
                     selected = temp;
                 }
             }
-            
+
             if (selected.getName().equals( "start" )) {
                 // Create an entirely new graph
                 graph = species.createNewGraph( null, state );
             }
             else {
-            
+
                 // Find all nodes that should be removed
                 Node newEnd   = init.endNode.clone();
                 Set<Node> nodesToRemove = findNodesToRemove(selected);
                 Set<Edge> edgesToRemove = new HashSet<Edge>();
-                
+
                 // Remove nodes and edges
                 for (Node node : nodesToRemove) {
                     graph.nodeMap.remove( node.getName() );
                     graph.considerableNodeMap.remove( node.getName() );
-    
+
                     for (Edge e : node.getIncomingEdgeList()) {
                         edgesToRemove.add( e );
                         e.getFromNode().getOutgoingEdgeList().remove( e );
@@ -83,60 +83,60 @@ public class GraphMutationPipeline extends BreedingPipeline {
                         e.getToNode().getIncomingEdgeList().remove( e );
                     }
                 }
-                
+
                 for (Edge edge : edgesToRemove) {
                     graph.edgeList.remove( edge );
                     graph.considerableEdgeList.remove( edge );
                 }
-                
-                
+
+
                 // Create data structures
                 Set<Node> unused = new HashSet<Node>(init.relevant);
                 Set<Node> relevant = init.relevant;
                 Set<String> currentEndInputs = new HashSet<String>();
                 Set<Node> seenNodes = new HashSet<Node>();
                 List<Node> candidateList = new ArrayList<Node>();
-                
+
                 for (Node node: graph.nodeMap.values()) {
                     unused.remove( node );
                     seenNodes.add( node );
                 }
-                
+
                 // Must add all nodes as seen before adding candidate list entries
                 for (Node node: graph.nodeMap.values()) {
                     if (!node.getName().equals( "end" ))
                         species.addToCandidateList( node, seenNodes, relevant, candidateList, init);
                 }
-                
+
                 // Update currentEndInputs
                 for (Node node : graph.nodeMap.values()) {
                     for (String o : node.getOutputs()) {
                         currentEndInputs.addAll(init.taxonomyMap.get(o).endNodeInputs);
                     }
                 }
-                
-                
+
+
                 Collections.shuffle(candidateList, init.random);
                 Map<String,Edge> connections = new HashMap<String,Edge>();
                 graph.unused = unused;
-                
+
                 // Continue constructing graph
                 species.finishConstructingGraph( currentEndInputs, newEnd, candidateList, connections, init,
                         graph, null, seenNodes, relevant );
-    
+
             }
             graph.evaluated=false;
         }
         return n;
 	}
-	
+
 	private Set<Node> findNodesToRemove(Node selected) {
 	    Set<Node> nodes = new HashSet<Node>();
 	    _findNodesToRemove(selected, nodes);
 	    return nodes;
-	    
+
 	}
-	
+
 	private void _findNodesToRemove(Node current, Set<Node> nodes) {
         nodes.add( current );
         for (Edge e: current.getOutgoingEdgeList()) {

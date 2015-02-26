@@ -5,7 +5,7 @@ import ec.Individual;
 import ec.simple.SimpleShortStatistics;
 
 /**
- * 
+ *
  * @author Alex
  */
 public class GraphStatistics extends SimpleShortStatistics {
@@ -17,10 +17,10 @@ public class GraphStatistics extends SimpleShortStatistics {
         if (output && doTime)
             {
             Runtime r = Runtime.getRuntime();
-            long curU =  r.totalMemory() - r.freeMemory();          
+            long curU =  r.totalMemory() - r.freeMemory();
             state.output.print("" + (System.currentTimeMillis()-lastTime) + " ",  statisticslog);
             }
-                        
+
         int subpops = state.population.subpops.length;                          // number of supopulations
         totalIndsThisGen = new long[subpops];                                           // total assessed individuals
         bestOfGeneration = new Individual[subpops];                                     // per-subpop best individual this generation
@@ -32,9 +32,9 @@ public class GraphStatistics extends SimpleShortStatistics {
         prepareStatistics(state);
 
         // gather per-subpopulation statistics
-                
+
         for(int x=0;x<subpops;x++)
-            {                   
+            {
             for(int y=0; y<state.population.subpops[x].individuals.length; y++)
                 {
                 if (state.population.subpops[x].individuals[y].evaluated)               // he's got a valid fitness
@@ -45,7 +45,7 @@ public class GraphStatistics extends SimpleShortStatistics {
                     totalSizeSoFar[x] += size;
                     totalIndsThisGen[x] += 1;
                     totalIndsSoFar[x] += 1;
-                                        
+
                     // update fitness
                     if (bestOfGeneration[x]==null ||
                         state.population.subpops[x].individuals[y].fitness.betterThan(bestOfGeneration[x].fitness))
@@ -54,10 +54,10 @@ public class GraphStatistics extends SimpleShortStatistics {
                         if (bestSoFar[x]==null || bestOfGeneration[x].fitness.betterThan(bestSoFar[x].fitness))
                             bestSoFar[x] = (Individual)(bestOfGeneration[x].clone());
                         }
-            
+
                     // sum up mean fitness for population
                     totalFitnessThisGen[x] += state.population.subpops[x].individuals[y].fitness.fitness();
-                                        
+
                     // hook for KozaShortStatistics etc.
                     gatherExtraSubpopStatistics(state, x, y);
                     }
@@ -67,7 +67,7 @@ public class GraphStatistics extends SimpleShortStatistics {
 
             // hook for KozaShortStatistics etc.
             if (output && doSubpops) printExtraSubpopStatisticsBefore(state, x);
-                        
+
             // print out optional average size information
             if (output && doSize && doSubpops)
                 {
@@ -76,7 +76,7 @@ public class GraphStatistics extends SimpleShortStatistics {
                 state.output.print("" + (double)(bestOfGeneration[x].size()) + " ", statisticslog);
                 state.output.print("" + (double)(bestSoFar[x].size()) + " ", statisticslog);
                 }
-                        
+
             // print out fitness information
             if (output && doSubpops)
                 {
@@ -88,9 +88,9 @@ public class GraphStatistics extends SimpleShortStatistics {
             // hook for KozaShortStatistics etc.
             if (output && doSubpops) printExtraSubpopStatisticsAfter(state, x);
             }
-  
-  
-  
+
+
+
         // Now gather per-Population statistics
         long popTotalInds = 0;
         long popTotalIndsSoFar = 0;
@@ -100,7 +100,9 @@ public class GraphStatistics extends SimpleShortStatistics {
         double popTotalFitness = 0;
         Individual popBestOfGeneration = null;
         Individual popBestSoFar = null;
-                
+        int path = 0;
+        int numNodes = 0;
+
         for(int x=0;x<subpops;x++)
             {
             popTotalInds += totalIndsThisGen[x];
@@ -110,16 +112,19 @@ public class GraphStatistics extends SimpleShortStatistics {
             popTotalFitness += totalFitnessThisGen[x];
             if (bestOfGeneration[x] != null && (popBestOfGeneration == null || bestOfGeneration[x].fitness.betterThan(popBestOfGeneration.fitness)))
                 popBestOfGeneration = bestOfGeneration[x];
-            if (bestSoFar[x] != null && (popBestSoFar == null || bestSoFar[x].fitness.betterThan(popBestSoFar.fitness)))
+            if (bestSoFar[x] != null && (popBestSoFar == null || bestSoFar[x].fitness.betterThan(popBestSoFar.fitness))) {
                 popBestSoFar = bestSoFar[x];
+                path = ((GraphIndividual) popBestSoFar).longestPathLength;
+                numNodes = ((GraphIndividual) popBestSoFar).numAtomicServices;
+            }
 
             // hook for KozaShortStatistics etc.
             gatherExtraPopStatistics(state, x);
             }
-                        
+
         // build mean
         popMeanFitness = (popTotalInds > 0 ? popTotalFitness / popTotalInds : 0);               // average out
-                
+
         // hook for KozaShortStatistics etc.
         if (output) printExtraPopStatisticsBefore(state);
 
@@ -131,26 +136,25 @@ public class GraphStatistics extends SimpleShortStatistics {
             state.output.print("" + (double)(popBestOfGeneration.size()) + " " , statisticslog);                                    // size of best ind of pop this gen
             state.output.print("" + (double)(popBestSoFar.size()) + " " , statisticslog);                           // size of best ind of pop so far
             }
-                
+
         // print out fitness info
         if (output)
             {
             state.output.print("" + popMeanFitness + " " , statisticslog);                                                                                  // mean fitness of pop this gen
             state.output.print("" + (popBestOfGeneration.fitness.fitness()) + " " , statisticslog);                 // best fitness of pop this gen
             state.output.print("" + (popBestSoFar.fitness.fitness()) + " " , statisticslog);                // best fitness of pop so far
+            state.output.print("" + numNodes + " ", statisticslog);
+            state.output.print("" + path + " ", statisticslog);
+
             }
-                        
+
         // hook for KozaShortStatistics etc.
         if (output) printExtraPopStatisticsAfter(state);
-        GraphIndividual graph = (GraphIndividual)popBestSoFar;
-        state.output.print(String.format("%d %d ", (graph.nodeMap.size()-2), graph.longestPathLength ), statisticslog);
-        
+
         // we're done!
         if (output) state.output.println("", statisticslog);
-        
-        //super.postEvaluationStatistics( state );
-        //state.output.println(String.format(" %d\n", 1), log);
+
     }
-    
-    
+
+
 }

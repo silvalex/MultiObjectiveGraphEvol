@@ -18,6 +18,7 @@ public class GraphIndividual extends Individual {
 	public List<Edge> considerableEdgeList = new ArrayList<Edge>();
 	public Set<Node> unused;
 	public int longestPathLength;
+	public int numAtomicServices;
 
 	public GraphIndividual(){
 		super();
@@ -59,5 +60,14 @@ public class GraphIndividual extends Individual {
 		}
 		return builder.toString();
 	}
+
+//	@Override
+//	public GraphIndividual clone() {
+//		GraphIndividual newG = new GraphIndividual();
+//		newG.longestPathLength = longestPathLength;
+//		newG.numAtomicServices = numAtomicServices;
+//
+//		return newG;
+//	}
 
 }

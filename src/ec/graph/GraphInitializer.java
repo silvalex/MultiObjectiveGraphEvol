@@ -173,7 +173,7 @@ public class GraphInitializer extends SimpleInitializer {
 //			        queue.add( parent );
 //			}
 			queue.add( n );
-			
+
 			while (!queue.isEmpty()) {
 			    TaxonomyNode current = queue.poll();
 		        seenConceptsOutput.add( current );
@@ -183,12 +183,6 @@ public class GraphInitializer extends SimpleInitializer {
 		                queue.add(parent);
 		                seenConceptsOutput.add(parent);
 		            }
-		            else {
-		                int i = 0;
-		            }
-		        }
-		        if (queue.size() > 100000) { // XXX
-		           int i = 0;
 		        }
 			}
 		}
@@ -205,7 +199,7 @@ public class GraphInitializer extends SimpleInitializer {
 //			        queue.add(child);
 //			}
 			queue.add( n );
-			
+
 			while(!queue.isEmpty()) {
 				TaxonomyNode current = queue.poll();
 				seenConceptsInput.add( current );
@@ -215,13 +209,7 @@ public class GraphInitializer extends SimpleInitializer {
 			            queue.add(child);
 			            seenConceptsInput.add( child );
 			        }
-			        else {
-			            int i = 0;
-			        }
 			    }
-				if (queue.size() > 10000) { //XXX
-				    int i = 0;
-				}
 			}
 		}
 		return;
@@ -493,12 +481,15 @@ public class GraphInitializer extends SimpleInitializer {
 		}
 		catch (ParserConfigurationException e) {
             System.out.println("Task file parsing failed...");
+            e.printStackTrace();
 		}
 		catch (SAXException e) {
             System.out.println("Task file parsing failed...");
+            e.printStackTrace();
 		}
 		catch (IOException e) {
             System.out.println("Task file parsing failed...");
+            e.printStackTrace();
 		}
 	}
 
@@ -553,7 +544,7 @@ public class GraphInitializer extends SimpleInitializer {
     					    taxNode.parents.add(parent);
     						parent.children.add(taxNode);
     					}
-    
+
     					NodeList children = currNode.getChildNodes();
     					processTaxonomyChildren(taxNode, children);
 					}

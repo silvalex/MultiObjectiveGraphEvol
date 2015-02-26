@@ -48,7 +48,7 @@ pop.subpop.0.species.pipe.source.2.source.0	   = ec.select.TournamentSelection
 select.tournament.size                         = 2
 
 eval.problem         = ec.graph.GraphEvol
-composition-task     = owlsTCTask1.xml
+composition-task     = owlsTCTask4.xml
 composition-taxonomy = owlsTCTaxonomy.xml
 composition-services = owlsTCServices.xml
 #composition-task     = problem.xml

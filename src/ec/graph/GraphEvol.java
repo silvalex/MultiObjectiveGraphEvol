@@ -7,6 +7,7 @@ import ec.Individual;
 import ec.Problem;
 import ec.simple.SimpleFitness;
 import ec.simple.SimpleProblemForm;
+import ec.util.Log;
 
 public class GraphEvol extends Problem implements SimpleProblemForm {
 
@@ -20,7 +21,7 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
 	        evaluateQoS(init, state, ind, subpopulation, threadnum);
 	    }
 	}
-	
+
     public void evaluateQoS(final GraphInitializer init, final EvolutionState state, final Individual ind, final int subpopulation, final int threadnum) {
 		if (ind.evaluated) return;   //don't evaluate the individual if it's already evaluated
         if (!(ind instanceof GraphIndividual))
@@ -68,10 +69,11 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
         // Calculate longest time
         int runPath = findLongestPath2(ind2) - 1;
         ind2.longestPathLength = runPath;
-        int numAtomicProcess = (ind2.considerableNodeMap.size() - 2);
-        boolean isIdeal = runPath == init.idealPathLength && numAtomicProcess == init.idealNumAtomic;
-        
-        double fitness = (0.45 * 2.0) + (0.05 * (1.0 / runPath)) + (0.05 * (1.0/ numAtomicProcess));
+        ind2.numAtomicServices = (ind2.considerableNodeMap.size() - 2);
+        boolean isIdeal = runPath == init.idealPathLength && ind2.numAtomicServices == init.idealNumAtomic;
+
+        double fitness = 0.5 * (1.0 / runPath) + 0.5 * (1.0/ ind2.numAtomicServices);
+        //double fitness = (100 - runPath) + (100 - ind2.numAtomicServices);
 
         ((SimpleFitness)ind2.fitness).setFitness(state,
                 // ...the fitness...
@@ -202,12 +204,7 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
 //		Log l = state.output.getLog(log);
 //		GraphIndividual graph = (GraphIndividual) ind;
 //
-//		System.out.println(String.format("runPath= %d #atomicProcess= %d\n", findLongestPath2(graph) - 1, graph.considerableNodeMap.size() - 2));
-//		l.writer.append(String.format("runPath= %d #atomicProcess= %d\n", findLongestPath2(graph) - 1, graph.considerableNodeMap.size() - 2));
-//		l.writer.flush();
-
-//		ec.util.Output
-//	    if (thread >= 6000)
-//	        System.exit( 0 );
+//		System.out.println(String.format("runPath= %d #atomicProcess= %d\n", graph.longestPathLength, graph.considerableNodeMap.size() - 2));
+//		l.writer.append(String.format("runPath= %d #atomicProcess= %d\n", graph.longestPathLength, graph.considerableNodeMap.size() - 2));
 //	}
 }
