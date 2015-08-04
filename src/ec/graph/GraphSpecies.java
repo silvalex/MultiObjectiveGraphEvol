@@ -22,16 +22,15 @@ public class GraphSpecies extends Species {
 
 	@Override
 	public Individual newIndividual(EvolutionState state, int thread) {
-		return createNewGraph(null, state);
+	    GraphInitializer init = (GraphInitializer) state.initializer;
+		return createNewGraph(null, state, init.startNode.clone(), init.endNode.clone());
 	}
 
-	public GraphIndividual createNewGraph(GraphIndividual mergedGraph, EvolutionState state) {
+	public GraphIndividual createNewGraph(GraphIndividual mergedGraph, EvolutionState state, Node start, Node end) {
 		GraphInitializer init = (GraphInitializer) state.initializer;
 		Set<Node> unused = new HashSet<Node>(init.relevant);
 
 		GraphIndividual newGraph = new GraphIndividual(unused);
-		Node start = init.startNode.clone();
-		Node end   = init.endNode.clone();
 
 		Set<String> currentEndInputs = new HashSet<String>();
 		Map<String,Edge> connections = new HashMap<String,Edge>();

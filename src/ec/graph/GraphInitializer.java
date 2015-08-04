@@ -60,6 +60,7 @@ public class GraphInitializer extends SimpleInitializer {
 	public double overlapPercentage;
 	public int idealPathLength;
 	public int idealNumAtomic;
+	public int numNodesMutation;
 
 //	public Stopwatch watch = new Stopwatch();
 
@@ -79,6 +80,7 @@ public class GraphInitializer extends SimpleInitializer {
 		Parameter idealNumAtomicParam = new Parameter("ideal-num-atomic");
 		Parameter runningOwlsParam = new Parameter("running-owls");
 		Parameter findConceptsParam = new Parameter("find-concepts");
+		Parameter numNodesMutationParam = new Parameter("num-nodes-mutation");
 
 		w1 = state.parameters.getDouble(weight1Param, null);
 		w2 = state.parameters.getDouble(weight2Param, null);
@@ -90,6 +92,7 @@ public class GraphInitializer extends SimpleInitializer {
 		idealPathLength = state.parameters.getInt(idealPathLengthParam, null);
 		idealNumAtomic = state.parameters.getInt(idealNumAtomicParam, null);
 		findConcepts = state.parameters.getBoolean( findConceptsParam, null, false );
+		numNodesMutation = state.parameters.getInt( numNodesMutationParam, null );
 
 		parseWSCServiceFile(state.parameters.getString(servicesParam, null));
 		parseWSCTaskFile(state.parameters.getString(taskParam, null));

@@ -17,7 +17,7 @@ public class GraphMutationPipeline extends BreedingPipeline {
 
 	@Override
 	public Parameter defaultBase() {
-		return new Parameter("graphappendpipeline");
+		return new Parameter("graphmutationpipeline");
 	}
 
 	@Override
@@ -60,7 +60,7 @@ public class GraphMutationPipeline extends BreedingPipeline {
 
             if (selected.getName().equals( "start" )) {
                 // Create an entirely new graph
-                graph = species.createNewGraph( null, state );
+                graph = species.createNewGraph( null, state, init.startNode.clone(), init.endNode.clone() );
             }
             else {
 

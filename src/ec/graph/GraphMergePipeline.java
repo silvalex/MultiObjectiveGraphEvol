@@ -62,7 +62,7 @@ public class GraphMergePipeline extends BreedingPipeline {
         		if (!init.overlapEnabled || enoughOverlap(g1, g2, init.overlapPercentage)) {
         		    GraphIndividual newG = mergeGraphs(g1, g2, init);
         		    GraphSpecies species = (GraphSpecies) newG.species;
-        		    inds[q] = species.createNewGraph(newG, state);
+        		    inds[q] = species.createNewGraph(newG, state, init.startNode.clone(), init.endNode.clone());
         		}
         		else {
         		    if (g1.fitness.fitness() > g2.fitness.fitness())
