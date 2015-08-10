@@ -83,10 +83,12 @@ public class LocalMutationPipeline extends BreedingPipeline {
             removeMutationNodes(init.numNodesMutation, selected, graph, taskInput, taskOutput, disconnectedInput, disconnectedOutput);
 
             // Generate the new subgraph
-            GraphIndividual subgraph = species.createNewGraph( null, state, localStartNode, localEndNode );
+            Set<Node> nodesToConsider = new HashSet<Node>(init.relevant);
+            nodesToConsider.removeAll(graph.nodeMap.values());
+            GraphIndividual subgraph = species.createNewGraph( null, state, localStartNode, localEndNode, nodesToConsider );
 
             // Add the new subgraph into the existing candidate
-            fitMutatedSubgraph(init, graph, subgraph, disconnectedInput, disconnectedOutput);
+            species.fitMutatedSubgraph(init, graph, subgraph, disconnectedInput, disconnectedOutput);
 
             // Remove any dangling nodes
             init.removeDanglingNodes( graph );
@@ -165,127 +167,5 @@ public class LocalMutationPipeline extends BreedingPipeline {
                 disconnectedInput.put(graph.nodeMap.get(edge.getToNode().getName()), edge.getIntersect());
             }
         }
-    }
-
-    private void fitMutatedSubgraph(GraphInitializer init, GraphIndividual graph, GraphIndividual subgraph, Map<Node, Set<String>> disconnectedInput, Set<Node> disconnectedOutput){
-
-        // Remove any repeated nodes in the graph (but keep a list of their outgoing edges)
-        List<Edge> outgoingEdges = new ArrayList<Edge>();
-        for (String key : subgraph.nodeMap.keySet()){
-            if (!key.equals( "start" ) && !key.equals( "end" )) {
-                Node node = graph.nodeMap.get( key );
-                if (node != null) {
-                    // Add outgoing edges to list
-                    outgoingEdges.addAll(node.getOutgoingEdgeList());
-
-                    // Remove incoming edges from the graph
-                    for (Edge e : node.getIncomingEdgeList()){
-                        graph.edgeList.remove( e );
-                        graph.considerableEdgeList.remove( e );
-                    }
-
-                    // Remove outgoing edges from the graph
-                    for (Edge e : node.getOutgoingEdgeList()){
-                        graph.edgeList.remove( e );
-                        graph.considerableEdgeList.remove( e );
-                    }
-                }
-
-                // Remove node from graph
-                graph.nodeMap.remove( key );
-                graph.considerableNodeMap.remove( key );
-            }
-        }
-
-        // Add subgraph to main graph
-        Set<Node> firstSubgraphLayer = new HashSet<Node>();
-        Set<Node> lastSubgraphLayer = new HashSet<Node>();
-
-        for (Node n : subgraph.nodeMap.values()) {
-            if (!n.getName().equals( "start" ) && !n.getName().equals( "end" )){
-                Node newN = n.clone();
-                graph.nodeMap.put( newN.getName(), newN );
-                graph.considerableNodeMap.put( newN.getName(), newN );
-            }
-
-            for (Edge e : n.getIncomingEdgeList()){
-                if (e.getFromNode().getName().equals( "start" )) {
-                    firstSubgraphLayer.add(n);
-                }
-                else {
-                    addNewGraphEdge(e, graph);
-                }
-            }
-
-            for(Edge e : n.getOutgoingEdgeList()){
-                if (e.getToNode().getName().equals( "end" )) {
-                    lastSubgraphLayer.add(n);
-                }
-                else {
-                    addNewGraphEdge(e, graph);
-                }
-            }
-        }
-
-        // If edge destination not in subgraph, re-add edge to the graph XXX Could this introduce cycles?
-        for (Edge e : outgoingEdges) {
-            if (!subgraph.nodeMap.containsKey(e.getToNode().getName())) {
-                addNewGraphEdge(e, graph);
-            }
-        }
-
-        // Match first subgraph layer with nodes from main graph whose output has been disconnected
-        Map<String,Edge> connections = new HashMap<String,Edge>();
-        for (Node s : firstSubgraphLayer) {
-            Node n = graph.nodeMap.get( s.getName() );
-            // Find all input connections
-            for (String input : n.getInputs()) {
-            	connectNewGraphNode(init, graph, n, input, connections, disconnectedOutput);
-            }
-        }
-
-        // Match last subgraph layer with nodes from main graph whose input has been disconnected
-        connections.clear();
-        for (Entry<Node, Set<String>> entry : disconnectedInput.entrySet()) {
-        	for (String input : entry.getValue()) {
-        		connectNewGraphNode(init, graph, entry.getKey(), input, connections, lastSubgraphLayer);
-        	}
-        }
-    }
-
-    private void connectNewGraphNode(GraphInitializer init, GraphIndividual graph, Node n, String input, Map<String,Edge> connections, Set<Node> fromNodes) {
-    	for (Node candidate : init.taxonomyMap.get(input).servicesWithOutput){
-    		if (fromNodes.contains(candidate)) {
-
-    			Node graphC = graph.nodeMap.get(candidate.getName());
-    			Set<String> intersect = new HashSet<String>();
-                intersect.add(input);
-
-                Edge mapEdge = connections.get(graphC.getName());
-                if (mapEdge == null) {
-                    Edge e = new Edge(intersect);
-                    e.setFromNode(graph.nodeMap.get(graphC.getName()));
-                    e.setToNode(graphC);
-                    connections.put(e.getFromNode().getName(), e);
-
-                    // Connect it to graph
-                    graph.edgeList.add(e);
-                    graph.considerableEdgeList.add(e);
-                    graphC.getOutgoingEdgeList().add(e);
-                    n.getIncomingEdgeList().add(e);
-                }
-                else
-                    mapEdge.getIntersect().addAll(intersect);
-    		}
-        }
-    }
-
-    private void addNewGraphEdge(Edge e, GraphIndividual destGraph){
-        Edge newE = new Edge(e.getIntersect());
-        newE.setFromNode( destGraph.nodeMap.get( e.getFromNode().getName() ) );
-        newE.setToNode( destGraph.nodeMap.get( e.getToNode().getName() ) );
-
-        destGraph.edgeList.add(newE);
-        destGraph.considerableEdgeList.add(newE);
     }
 }

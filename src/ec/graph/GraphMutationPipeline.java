@@ -60,7 +60,7 @@ public class GraphMutationPipeline extends BreedingPipeline {
 
             if (selected.getName().equals( "start" )) {
                 // Create an entirely new graph
-                graph = species.createNewGraph( null, state, init.startNode.clone(), init.endNode.clone() );
+                graph = species.createNewGraph( null, state, init.startNode.clone(), init.endNode.clone(), init.relevant );
             }
             else {
 

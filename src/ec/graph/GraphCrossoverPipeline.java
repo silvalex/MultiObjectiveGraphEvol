@@ -1,10 +1,14 @@
 package ec.graph;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
 import ec.BreedingPipeline;
 import ec.EvolutionState;
@@ -32,6 +36,7 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
             Individual[] inds, EvolutionState state, int thread) {
 
 		GraphInitializer init = (GraphInitializer) state.initializer;
+		GraphSpecies species = null;
 
 		Individual[] inds1 = new Individual[inds.length];
 		Individual[] inds2 = new Individual[inds.length];
@@ -66,13 +71,19 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
         		GraphIndividual g1 = ((GraphIndividual)inds1[x]);
         		GraphIndividual g2 = ((GraphIndividual)inds2[x]);
 
+        		if (species == null)
+        			species = (GraphSpecies) g1.species;
+
+        		Set<Node> disconnectedInput1 = new HashSet<Node>();
+        		Set<Node> disconnectedInput2 = new HashSet<Node>();
+
         		// Identify the half of each graph, and sever each graph into two
         		GraphIndividual g1Beginning = null, g1End = null, g2Beginning = null, g2End = null;
-        		severGraph(g1, g1Beginning, g1End);
-        		severGraph(g2, g2Beginning, g2End);
+        		Set<Node> endLayer1 = severGraph(g1, g1Beginning, g1End, disconnectedInput1);
+        		Set<Node> endLayer2 = severGraph(g2, g2Beginning, g2End, disconnectedInput2);
 
-        		GraphIndividual child1 = connectGraphHalves(g1Beginning, g2End); // Create first child
-        		GraphIndividual child2 = connectGraphHalves(g2Beginning, g1End); // Create second child
+        		GraphIndividual child1 = connectGraphHalves(state, init, species, g1Beginning, g2End, endLayer2); // Create first child
+        		GraphIndividual child2 = connectGraphHalves(state, init, species, g2Beginning, g1End, endLayer1); // Create second child
 
         		// Incorporate children into population, after having removed any dangling nodes
         		init.removeDanglingNodes( child1 );
@@ -85,8 +96,9 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
         return nMin;
     }
 
-    private void severGraph(GraphIndividual graph, GraphIndividual graphBeginning, GraphIndividual graphEnd) {
+    private Set<Node> severGraph(GraphIndividual graph, GraphIndividual graphBeginning, GraphIndividual graphEnd, Set<Node> disconnectedInput) {
     	graphBeginning = new GraphIndividual();
+    	Set<Node> firstLayerEnd = new HashSet<Node>();
 
         // Find first half of the graph
     	int numNodes = graph.nodeMap.size() / 2;
@@ -134,20 +146,92 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
 
         		// Also remove this edge from the node in the second graph
         		current.getToNode().getIncomingEdgeList().remove(current);
+        		firstLayerEnd.add(current.getToNode());
         	}
         }
+        return firstLayerEnd;
     }
 
-    private GraphIndividual connectGraphHalves(GraphIndividual firstHalf, GraphIndividual secondHalf){
+    private GraphIndividual connectGraphHalves(EvolutionState state, GraphInitializer init, GraphSpecies species, GraphIndividual firstHalf, GraphIndividual secondHalf, Set<Node> secondHalfLayer){
 
     	// Add both halves to the final graph
     	GraphIndividual finalGraph = firstHalf;
 
     	for(Node n: secondHalf.nodeMap.values()) {
+    		// Add a suffix to the name of the node if another instance of it already in graph
+            if (finalGraph.nodeMap.containsKey(n.getName())){
+            	n.setName(n.getName() + "-" + (Node.suffix++));
+            }
 
+            finalGraph.nodeMap.put( n.getName(), n );
+            finalGraph.considerableNodeMap.put( n.getName(), n );
+
+            for (Edge e : n.getIncomingEdgeList()){
+            	finalGraph.edgeList.add(e);
+            	finalGraph.considerableEdgeList.add(e);
+            }
+
+            for(Edge e : n.getOutgoingEdgeList()){
+            	finalGraph.edgeList.add(e);
+            	finalGraph.considerableEdgeList.add(e);
+            }
     	}
-    	// Check if we can satisfy the halves as they are
-    	// If not, satisfy as many as we can and then create a subproblem that we solve in order to create the remaining connections
-    	return null; // TODO
+
+    	// Attempt to satisfy each node from the second half with nodes from the first half
+    	Map<String,Edge> connections = new HashMap<String,Edge>();
+    	Map<Node,Set<String>> inputsNotSatisfied = new HashMap<Node, Set<String>>();
+
+    	Set<Node> firstHalfNodes = new HashSet<Node>(firstHalf.nodeMap.values());
+    	for (Node n : secondHalfLayer) {
+    		connections.clear();
+    		for (String input : n.getInputs()) {
+    			boolean satisfied = species.connectNewGraphNode(init, finalGraph, n, input, connections, firstHalfNodes);
+    			if (!satisfied) {
+    				Set<String> inputs = inputsNotSatisfied.get(n);
+    				if (inputs == null) {
+    					inputs = new HashSet<>();
+    					inputsNotSatisfied.put(n, inputs);
+    				}
+    				inputs.add(input);
+    			}
+    		}
+    	}
+
+    	// If not completely satisfied, create a subproblem that we solve in order to create the remaining connections
+    	 if (!inputsNotSatisfied.isEmpty()) {
+    		 addSubgraph(state, init, species, finalGraph, firstHalfNodes, inputsNotSatisfied);
+    	}
+    	return finalGraph;
+    }
+
+    private void addSubgraph(EvolutionState state, GraphInitializer init, GraphSpecies species, GraphIndividual graph, Set<Node> firstHalfNodes, Map<Node, Set<String>> inputsNotSatisfied) {
+    	double[] mockQos = new double[4];
+        mockQos[GraphInitializer.TIME] = 0;
+        mockQos[GraphInitializer.COST] = 0;
+        mockQos[GraphInitializer.AVAILABILITY] = 1;
+        mockQos[GraphInitializer.RELIABILITY] = 1;
+
+        // The task input is the output of all nodes in the first half
+        Set<String> taskInput = new HashSet<String>();
+        for (Node n : firstHalfNodes) {
+       	 taskInput.addAll(n.getOutputs());
+        }
+
+        // The task output is made up of the inputs no satisfied yet
+        Set<String> taskOutput = new HashSet<String>();
+        for (Set<String> set: inputsNotSatisfied.values()) {
+       	 taskOutput.addAll(set);
+        }
+
+       Node localStartNode = new Node("start", mockQos, new HashSet<String>(), taskInput);
+       Node localEndNode = new Node("end", mockQos, taskOutput ,new HashSet<String>());
+
+   		// Generate the new subgraph
+       Set<Node> nodesToConsider = new HashSet<Node>(init.relevant);
+       nodesToConsider.removeAll(graph.nodeMap.values());
+       GraphIndividual subgraph = species.createNewGraph( null, state, localStartNode, localEndNode, nodesToConsider );
+
+       // Fit subgraph into main graph
+       species.fitMutatedSubgraph(init, graph, subgraph, inputsNotSatisfied, firstHalfNodes);
     }
 }
