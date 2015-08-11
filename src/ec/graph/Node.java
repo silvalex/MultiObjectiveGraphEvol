@@ -14,9 +14,6 @@ public class Node implements Cloneable {
 	private Set<String> outputs;
 	private boolean consider = true;
 
-	// Suffix for adding to the names of nodes
-	public static int suffix = 0;
-
 	public Node(String name, double[] qos, Set<String> inputs, Set<String> outputs) {
 		this.name = name;
 		this.qos = qos;

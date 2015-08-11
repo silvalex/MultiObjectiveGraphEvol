@@ -7,8 +7,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import ec.EvolutionState;
 import ec.Individual;
@@ -268,11 +268,6 @@ public class GraphSpecies extends Species {
         for (Node n : subgraph.nodeMap.values()) {
             if (!n.getName().equals( "start" ) && !n.getName().equals( "end" )){
                 Node newN = n.clone();
-
-                // Add a suffix to the name of the node if another instance of it already in graph
-                if (graph.nodeMap.containsKey(newN.getName())){
-                	newN.setName(newN.getName() + "-" + (Node.suffix++));
-                }
                 graph.nodeMap.put( newN.getName(), newN );
                 graph.considerableNodeMap.put( newN.getName(), newN );
             }
@@ -319,6 +314,9 @@ public class GraphSpecies extends Species {
         Edge newE = new Edge(e.getIntersect());
         newE.setFromNode( destGraph.nodeMap.get( e.getFromNode().getName() ) );
         newE.setToNode( destGraph.nodeMap.get( e.getToNode().getName() ) );
+        
+        if (newE.getFromNode() == null || newE.getToNode() == null)
+            System.out.println(); //XXX
 
         destGraph.edgeList.add(newE);
         destGraph.considerableEdgeList.add(newE);

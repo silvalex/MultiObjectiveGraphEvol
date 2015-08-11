@@ -1,11 +1,9 @@
 package ec.graph;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -158,11 +156,6 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
     	GraphIndividual finalGraph = firstHalf;
 
     	for(Node n: secondHalf.nodeMap.values()) {
-    		// Add a suffix to the name of the node if another instance of it already in graph
-            if (finalGraph.nodeMap.containsKey(n.getName())){
-            	n.setName(n.getName() + "-" + (Node.suffix++));
-            }
-
             finalGraph.nodeMap.put( n.getName(), n );
             finalGraph.considerableNodeMap.put( n.getName(), n );
 
@@ -189,7 +182,7 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
     			if (!satisfied) {
     				Set<String> inputs = inputsNotSatisfied.get(n);
     				if (inputs == null) {
-    					inputs = new HashSet<>();
+    					inputs = new HashSet<String>();
     					inputsNotSatisfied.put(n, inputs);
     				}
     				inputs.add(input);
