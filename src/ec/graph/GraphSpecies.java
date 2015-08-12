@@ -57,6 +57,7 @@ public class GraphSpecies extends Species {
 
 	public void finishConstructingGraph(Set<String> currentEndInputs, Node end, List<Node> candidateList, Map<String,Edge> connections,
 	        GraphInitializer init, GraphIndividual newGraph, GraphIndividual mergedGraph, Set<Node> seenNodes, Set<Node> relevant) {
+
 	 // While end cannot be connected to graph
         while(!currentEndInputs.containsAll(end.getInputs())) {
 
@@ -271,7 +272,9 @@ public class GraphSpecies extends Species {
                 graph.nodeMap.put( newN.getName(), newN );
                 graph.considerableNodeMap.put( newN.getName(), newN );
             }
+        }
 
+        for (Node n : subgraph.nodeMap.values()) {
             for (Edge e : n.getIncomingEdgeList()){
                 if (e.getFromNode().getName().equals( "start" )) {
                     firstSubgraphLayer.add(n);
@@ -314,7 +317,7 @@ public class GraphSpecies extends Species {
         Edge newE = new Edge(e.getIntersect());
         newE.setFromNode( destGraph.nodeMap.get( e.getFromNode().getName() ) );
         newE.setToNode( destGraph.nodeMap.get( e.getToNode().getName() ) );
-        
+
         if (newE.getFromNode() == null || newE.getToNode() == null)
             System.out.println(); //XXX
 
