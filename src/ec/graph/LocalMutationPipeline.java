@@ -53,16 +53,13 @@ public class LocalMutationPipeline extends BreedingPipeline {
         for(int q=start;q<n+start;q++) {
             GraphIndividual graph = (GraphIndividual)inds[q];
             GraphSpecies species = (GraphSpecies) graph.species;
-            Object[] nodes = graph.nodeMap.values().toArray();
+            List<Node> nodeList = new ArrayList<Node>(graph.nodeMap.values());
+            nodeList.remove(graph.nodeMap.get("start"));
+            nodeList.remove(graph.nodeMap.get("end"));
 
             // Randomly select node from which to perform mutation (excluding start and end nodes)
-            Node selected = null;
-            while (selected == null) {
-                Node temp = (Node) nodes[init.random.nextInt( nodes.length )];
-                if (!temp.getName().equals( "start" ) && !temp.getName().equals( "end" )) {
-                    selected = temp;
-                }
-            }
+        	int index = init.random.nextInt(nodeList.size());
+            Node selected = nodeList.get(index);
 
             // Select the additional nodes that will be involved in the mutation
             double[] mockQos = new double[4];

@@ -157,8 +157,8 @@ public class GraphInitializer extends SimpleInitializer {
 		}
 
 		// Add input and output nodes
-		addServiceToTaxonomyTree(startNode);
-		addEndNodeToTaxonomyTree();
+		//addServiceToTaxonomyTree(startNode);
+		//addEndNodeToTaxonomyTree();
 	}
 
 	private void addServiceToTaxonomyTree(Node s) {
@@ -206,7 +206,17 @@ public class GraphInitializer extends SimpleInitializer {
 			while(!queue.isEmpty()) {
 				TaxonomyNode current = queue.poll();
 				seenConceptsInput.add( current );
-			    current.servicesWithInput.add(s);
+
+			    Set<String> inputs = current.servicesWithInput.get(s);
+			    if (inputs == null) {
+			    	inputs = new HashSet<String>();
+			    	inputs.add(inputVal);
+			    	current.servicesWithInput.put(s, inputs);
+			    }
+			    else {
+			    	inputs.add(inputVal);
+			    }
+
 			    for (TaxonomyNode child : current.children) {
 			        if (!seenConceptsInput.contains( child )) {
 			            queue.add(child);

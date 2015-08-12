@@ -43,13 +43,13 @@ public class GraphAppendPipeline extends BreedingPipeline {
         // Perform mutation
         for(int q=start;q<n+start;q++) {
             GraphIndividual graph = (GraphIndividual)inds[q];
-            
+
 
             // Determine whether you want to append a node by the inputs or by the output(s)
             if (init.random.nextBoolean()) {
             	// From the inputs
             	Map<String, Edge> connections = new HashMap<String, Edge>();
-            	
+
 				candidateLoop: for (Node candidate : graph.unused) {
 					candidate = candidate.clone();
 					candidate.setConsidered(false);
@@ -100,7 +100,7 @@ public class GraphAppendPipeline extends BreedingPipeline {
             		candidate = c.clone();
             		candidate.setConsidered(false);
             		for (String o: candidate.getOutputs()) {
-						for (Node service : init.taxonomyMap.get(o).servicesWithInput) {
+						for (Node service : init.taxonomyMap.get(o).servicesWithInput.keySet()) {
 
 							if (graph.nodeMap.containsKey(service.getName()) && !connections.containsKey(service.getName())) {
 								Set<String> intersect = new HashSet<String>();
@@ -121,12 +121,12 @@ public class GraphAppendPipeline extends BreedingPipeline {
             			break;
             		}
             	}
-            	
+
 				// Connect candidate to graph
             	if (candidate != null)
             		((GraphSpecies)graph.species).appendCandidateToGraphByOutputs(candidate, connections, graph);
             }
-        
+
 
 
             graph.evaluated=false;
