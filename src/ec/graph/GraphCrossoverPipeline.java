@@ -178,7 +178,7 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
     	for (Node n : secondHalfLayer) {
     		connections.clear();
     		for (String input : n.getInputs()) {
-    			boolean satisfied = species.connectNewGraphNode(init, finalGraph, n, input, connections, firstHalfNodes);
+    			boolean satisfied = species.checkNewGraphNode(init, finalGraph, n, input, connections, firstHalfNodes);
     			if (!satisfied) {
     				Set<String> inputs = inputsNotSatisfied.get(n);
     				if (inputs == null) {

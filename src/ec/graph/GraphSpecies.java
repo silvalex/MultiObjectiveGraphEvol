@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -65,7 +64,7 @@ public class GraphSpecies extends Species {
 	        GraphInitializer init, GraphIndividual newGraph, GraphIndividual mergedGraph, Set<Node> seenNodes, Set<Node> relevant) {
 
 	 // While end cannot be connected to graph
-		while(!checkCandidateNodeSatisfied(init, connections, newGraph, end)){
+		while(!checkCandidateNodeSatisfied(init, connections, newGraph, end, end.getInputs(), null)){
 			connections.clear();
 
             // Select node
@@ -77,7 +76,7 @@ public class GraphSpecies extends Species {
                 // For all of the candidate inputs, check that there is a service already in the graph
                 // that can satisfy it
 
-                if (!checkCandidateNodeSatisfied(init, connections, newGraph, candidate)) {
+                if (!checkCandidateNodeSatisfied(init, connections, newGraph, candidate, candidate.getInputs(), null)) {
                     connections.clear();
                 	continue candidateLoop;
                 }
@@ -98,38 +97,6 @@ public class GraphSpecies extends Species {
             Collections.shuffle(candidateList, init.random);
         }
 
-        // Connect end node to graph
-//        connections.clear();
-//        Iterator<Node> it = newGraph.nodeMap.values().iterator();
-//        Node s;
-//
-//        while (!currentEndInputs.isEmpty() && it.hasNext()) {
-//            s = it.next();
-//
-//            Set<String> intersection = new HashSet<String>();
-//
-//            for (String o : s.getOutputs()) {
-//
-//                Set<String> endNodeInputs = init.taxonomyMap.get(o).endNodeInputs;
-//                if (!endNodeInputs.isEmpty()) {
-//
-//                    for (String i : endNodeInputs) {
-//                        if (currentEndInputs.contains(i)) {
-//                            intersection.add(i);
-//                            currentEndInputs.remove(i);
-//                        }
-//                    }
-//
-//                }
-//            }
-//
-//            if (!intersection.isEmpty()) {
-//                Edge e = new Edge(intersection);
-//                e.setFromNode(s);
-//                e.setToNode(end);
-//                connections.put(e.getFromNode().getName(), e);
-//            }
-//        }
         connectCandidateToGraphByInputs(end, connections, newGraph, currentEndInputs, init);
         connections.clear();
         init.removeDanglingNodes(newGraph);
@@ -137,49 +104,53 @@ public class GraphSpecies extends Species {
 
 	private boolean checkCandidateNodeSatisfied(GraphInitializer init,
 			Map<String, Edge> connections, GraphIndividual newGraph,
-			Node candidate) {
+			Node candidate, Set<String> candInputs, Set<Node> fromNodes) {
 
-		Set<String> candidateInputs = new HashSet<String>(candidate.getInputs());
+		Set<String> candidateInputs = new HashSet<String>(candInputs);
 		Set<String> startIntersect = new HashSet<String>();
 
 		// Check if the start node should be considered
 		Node start = newGraph.nodeMap.get("start");
-
-		for(String output : start.getOutputs()) {
-			Set<String> inputVals = init.taxonomyMap.get(output).servicesWithInput.get(candidate);
-			if (inputVals != null) {
-				candidateInputs.removeAll(inputVals);
-				startIntersect.addAll(inputVals);
-			}
-		}
-
-		if (!startIntersect.isEmpty()) {
-			Edge startEdge = new Edge(startIntersect);
-			startEdge.setFromNode(start);
-			startEdge.setToNode(candidate);
-			connections.put(start.getName(), startEdge);
+		
+		if (fromNodes == null || fromNodes.contains(start)) {
+    		for(String output : start.getOutputs()) {
+    			Set<String> inputVals = init.taxonomyMap.get(output).servicesWithInput.get(candidate);
+    			if (inputVals != null) {
+    				candidateInputs.removeAll(inputVals);
+    				startIntersect.addAll(inputVals);
+    			}
+    		}
+    
+    		if (!startIntersect.isEmpty()) {
+    			Edge startEdge = new Edge(startIntersect);
+    			startEdge.setFromNode(start);
+    			startEdge.setToNode(candidate);
+    			connections.put(start.getName(), startEdge);
+    		}
 		}
 
 
 		for (String input : candidateInputs) {
 			boolean found = false;
 			for (Node s : init.taxonomyMap.get(input).servicesWithOutput) {
-				if (newGraph.nodeMap.containsKey(s.getName())) {
-					Set<String> intersect = new HashSet<String>();
-					intersect.add(input);
-
-					Edge mapEdge = connections.get(s.getName());
-					if (mapEdge == null) {
-						Edge e = new Edge(intersect);
-						e.setFromNode(newGraph.nodeMap.get(s.getName()));
-						e.setToNode(candidate);
-						connections.put(e.getFromNode().getName(), e);
-					} else
-						mapEdge.getIntersect().addAll(intersect);
-
-					found = true;
-					break;
-				}
+			    if (fromNodes == null || fromNodes.contains(s)) {
+    				if (newGraph.nodeMap.containsKey(s.getName())) {
+    					Set<String> intersect = new HashSet<String>();
+    					intersect.add(input);
+    
+    					Edge mapEdge = connections.get(s.getName());
+    					if (mapEdge == null) {
+    						Edge e = new Edge(intersect);
+    						e.setFromNode(newGraph.nodeMap.get(s.getName()));
+    						e.setToNode(candidate);
+    						connections.put(e.getFromNode().getName(), e);
+    					} else
+    						mapEdge.getIntersect().addAll(intersect);
+    
+    					found = true;
+    					break;
+    				}
+			    }
 			}
 			// If that input cannot be satisfied, move on to another candidate
 			// node to connect
@@ -271,8 +242,32 @@ public class GraphSpecies extends Species {
 		}
 	}
 
-    public boolean connectNewGraphNode(GraphInitializer init, GraphIndividual graph, Node n, String input, Map<String,Edge> connections, Set<Node> fromNodes) {
+    public boolean checkNewGraphNode(GraphInitializer init, GraphIndividual graph, Node n, String input, Map<String,Edge> connections, Set<Node> fromNodes) {
     	boolean foundMatch = false;
+    
+    	// Check if start node should be considered as a candidate
+    	Node start = graph.nodeMap.get("start");
+    	if(fromNodes.contains(start)) {
+    	    
+    	    Set<String> startIntersect = new HashSet<String>();
+    	    
+            for(String output : start.getOutputs()) {
+                Set<String> inputVals = init.taxonomyMap.get(output).servicesWithInput.get(n);
+                if (inputVals != null) {
+                    //candidateInputs.removeAll(inputVals);
+                    startIntersect.addAll(inputVals);
+                }
+            }
+
+            if (!startIntersect.isEmpty()) {
+                Edge startEdge = new Edge(startIntersect);
+                startEdge.setFromNode(start);
+                startEdge.setToNode(n);
+                connections.put(start.getName(), startEdge);
+                return true;
+            }
+    	}
+    		
     	for (Node candidate : init.taxonomyMap.get(input).servicesWithOutput){
     		if (fromNodes.contains(candidate)) {
 
@@ -286,17 +281,13 @@ public class GraphSpecies extends Species {
                 if (mapEdge == null) {
                     Edge e = new Edge(intersect);
                     e.setFromNode(graph.nodeMap.get(graphC.getName()));
-                    e.setToNode(graphC);
+                    e.setToNode(n);
                     connections.put(e.getFromNode().getName(), e);
-
-                    // Connect it to graph
-                    graph.edgeList.add(e);
-                    graph.considerableEdgeList.add(e);
-                    graphC.getOutgoingEdgeList().add(e);
-                    n.getIncomingEdgeList().add(e);
                 }
                 else
                     mapEdge.getIntersect().addAll(intersect);
+                
+                break;
     		}
         }
     	return foundMatch;
@@ -305,7 +296,7 @@ public class GraphSpecies extends Species {
     public void fitMutatedSubgraph(GraphInitializer init, GraphIndividual graph, GraphIndividual subgraph, Map<Node, Set<String>> disconnectedInput, Set<Node> disconnectedOutput){
 
         // Add subgraph to main graph
-        Set<Node> firstSubgraphLayer = new HashSet<Node>();
+        Map<Node, Set<String>> firstSubgraphLayer = new HashMap<Node, Set<String>>();
         Set<Node> lastSubgraphLayer = new HashSet<Node>();
 
         for (Node n : subgraph.nodeMap.values()) {
@@ -317,41 +308,58 @@ public class GraphSpecies extends Species {
         }
 
         for (Node n : subgraph.nodeMap.values()) {
-            for (Edge e : n.getIncomingEdgeList()){
-                if (e.getFromNode().getName().equals( "start" )) {
-                    firstSubgraphLayer.add(n);
-                }
-                else {
-                    addNewGraphEdge(e, graph);
+            if(n.getName().equals( "end" )) {
+                for (Edge e : n.getIncomingEdgeList()) {
+                    lastSubgraphLayer.add(e.getFromNode());
                 }
             }
-
-            for(Edge e : n.getOutgoingEdgeList()){
-                if (e.getToNode().getName().equals( "end" )) {
-                    lastSubgraphLayer.add(n);
-                }
-                else {
-                    addNewGraphEdge(e, graph);
+            else{
+                for (Edge e : n.getIncomingEdgeList()){
+                    if (e.getFromNode().getName().equals( "start" )) {
+                        firstSubgraphLayer.put(n, e.getIntersect());
+                    }
+                    else {
+                        addNewGraphEdge(e, graph);
+                    }
                 }
             }
         }
 
         // Match first subgraph layer with nodes from main graph whose output has been disconnected
         Map<String,Edge> connections = new HashMap<String,Edge>();
-        for (Node s : firstSubgraphLayer) {
-            Node n = graph.nodeMap.get( s.getName() );
+        
+        for (Entry <Node, Set<String>> entry: firstSubgraphLayer.entrySet()) {
+            connections.clear();
+            Node n = graph.nodeMap.get( entry.getKey().getName() );
+            
             // Find all input connections
-            for (String input : n.getInputs()) {
-            	connectNewGraphNode(init, graph, n, input, connections, disconnectedOutput);
+            if (!checkCandidateNodeSatisfied(init, connections, graph, n, entry.getValue(), disconnectedOutput))
+                throw new RuntimeException("Cannot satisfy subgraph outputs.");
+            
+            // Connect it to graph
+            for (Edge e : connections.values()) {
+                graph.edgeList.add(e);
+                graph.considerableEdgeList.add(e);
+                e.getFromNode().getOutgoingEdgeList().add(e);
+                e.getToNode().getIncomingEdgeList().add(e);
             }
         }
 
         // Match last subgraph layer with nodes from main graph whose input has been disconnected
-        connections.clear();
         for (Entry<Node, Set<String>> entry : disconnectedInput.entrySet()) {
-        	for (String input : entry.getValue()) {
-        		connectNewGraphNode(init, graph, entry.getKey(), input, connections, lastSubgraphLayer);
-        	}
+            connections.clear();
+            
+            // Find all input connections
+            if (!checkCandidateNodeSatisfied(init, connections, graph, entry.getKey(), entry.getValue(), lastSubgraphLayer))
+                throw new RuntimeException("Cannot satisfy subgraph outputs.");
+        	
+            // Connect it to graph
+            for (Edge e : connections.values()) {
+                graph.edgeList.add(e);
+                graph.considerableEdgeList.add(e);
+                e.getFromNode().getOutgoingEdgeList().add(e);
+                e.getToNode().getIncomingEdgeList().add(e);
+            }
         }
     }
 
@@ -359,6 +367,9 @@ public class GraphSpecies extends Species {
         Edge newE = new Edge(e.getIntersect());
         newE.setFromNode( destGraph.nodeMap.get( e.getFromNode().getName() ) );
         newE.setToNode( destGraph.nodeMap.get( e.getToNode().getName() ) );
+        
+        destGraph.nodeMap.get( e.getFromNode().getName() ).getOutgoingEdgeList().add(newE);
+        destGraph.nodeMap.get( e.getToNode().getName() ).getIncomingEdgeList().add(newE);
 
         destGraph.edgeList.add(newE);
         destGraph.considerableEdgeList.add(newE);

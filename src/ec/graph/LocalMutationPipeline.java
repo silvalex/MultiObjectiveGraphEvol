@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 
@@ -83,14 +82,26 @@ public class LocalMutationPipeline extends BreedingPipeline {
 
 
             removeMutationNodes(init.numNodesMutation, selected, graph, taskInput, taskOutput, disconnectedInput, disconnectedOutput);
+            
+            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph)) {
+                System.out.println("Oops!");
+            }
 
             // Generate the new subgraph
             Set<Node> nodesToConsider = new HashSet<Node>(init.relevant);
             nodesToConsider.removeAll(graph.nodeMap.values());
             GraphIndividual subgraph = species.createNewGraph( null, state, localStartNode, localEndNode, nodesToConsider );
+            
+            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph)) {
+                System.out.println("Oops!");
+            }
 
             // Add the new subgraph into the existing candidate
             species.fitMutatedSubgraph(init, graph, subgraph, disconnectedInput, disconnectedOutput);
+            
+            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph)) {
+                System.out.println("Oops!");
+            }
 
 //            species.structureValidator1(graph);
 //            species.structureValidator2(graph);
