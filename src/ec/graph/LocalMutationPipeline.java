@@ -53,6 +53,11 @@ public class LocalMutationPipeline extends BreedingPipeline {
         for(int q=start;q<n+start;q++) {
             GraphIndividual graph = (GraphIndividual)inds[q];
             GraphSpecies species = (GraphSpecies) graph.species;
+
+            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph)) {
+            	System.out.println("Oops!");
+            }
+
             List<Node> nodeList = new ArrayList<Node>(graph.nodeMap.values());
             nodeList.remove(graph.nodeMap.get("start"));
             nodeList.remove(graph.nodeMap.get("end"));
@@ -86,6 +91,11 @@ public class LocalMutationPipeline extends BreedingPipeline {
 
             // Add the new subgraph into the existing candidate
             species.fitMutatedSubgraph(init, graph, subgraph, disconnectedInput, disconnectedOutput);
+
+//            species.structureValidator1(graph);
+//            species.structureValidator2(graph);
+//            species.structureValidator3(graph);
+//            species.structureValidator4(graph);
 
             // Remove any dangling nodes
             init.removeDanglingNodes( graph );

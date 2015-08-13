@@ -24,7 +24,13 @@ public class GraphSpecies extends Species {
 	@Override
 	public Individual newIndividual(EvolutionState state, int thread) {
 	    GraphInitializer init = (GraphInitializer) state.initializer;
-		return createNewGraph(null, state, init.startNode.clone(), init.endNode.clone(), init.relevant);
+	    GraphIndividual graph = createNewGraph(null, state, init.startNode.clone(), init.endNode.clone(), init.relevant);
+
+        if (!structureValidator1(graph) || !structureValidator2(graph) || !structureValidator3(graph) || !structureValidator4(graph)) {
+        	System.out.println("We've created a monster!");
+        }
+
+		return graph;
 	}
 
 	public GraphIndividual createNewGraph(GraphIndividual mergedGraph, EvolutionState state, Node start, Node end, Set<Node> relevant) {
@@ -362,7 +368,7 @@ public class GraphSpecies extends Species {
 	//                                                 Debugging Routines
 	//==========================================================================================================================
 
-    public void structureValidator( GraphIndividual graph ) {
+    public boolean structureValidator1( GraphIndividual graph ) {
         for ( Edge e : graph.edgeList ) {
             //Node fromNode = e.getFromNode();
             Node fromNode = graph.nodeMap.get( e.getFromNode().getName());
@@ -377,6 +383,7 @@ public class GraphSpecies extends Species {
 
             if ( !isContained ) {
                 System.out.println( "Outgoing edge for node " + fromNode.getName() + " not detected." );
+                return false;
             }
 
             //Node toNode = e.getToNode();
@@ -392,12 +399,14 @@ public class GraphSpecies extends Species {
 
             if ( !isContained ) {
                 System.out.println( "Incoming edge for node " + toNode.getName() + " not detected." );
+                return false;
             }
         }
-        System.out.println("************************************");
+        System.out.println("----------------------------------------------1");
+        return true;
     }
 
-    public void structureValidator2( GraphIndividual graph ) {
+    public boolean structureValidator2( GraphIndividual graph ) {
         for ( Edge e : graph.considerableEdgeList ) {
             Node fromNode = graph.considerableNodeMap.get( e.getFromNode().getName());
 
@@ -411,6 +420,7 @@ public class GraphSpecies extends Species {
 
             if ( !isContained ) {
                 System.out.println( "Considerable: Outgoing edge for node " + fromNode.getName() + " not detected." );
+                return false;
             }
 
             Node toNode = graph.considerableNodeMap.get( e.getToNode().getName());
@@ -425,8 +435,43 @@ public class GraphSpecies extends Species {
 
             if ( !isContained ) {
                 System.out.println( "Considerable: Incoming edge for node " + toNode.getName() + " not detected." );
+                return false;
             }
         }
-        System.out.println("-----------------------------------------------");
+        System.out.println("----------------------------------------------2");
+        return true;
+    }
+
+    /**
+     * Checks whether there are edges beginning and ending at the same node.
+     *
+     * @param graph
+     */
+    public boolean structureValidator3( GraphIndividual graph ) {
+    	for (Edge e : graph.edgeList) {
+    		if (e.getFromNode().getName().equals(e.getToNode().getName())) {
+    			System.out.println(String.format("Edge '%s makes a loop.", e));
+    			return false;
+    		}
+    	}
+        System.out.println("----------------------------------------------3");
+        return true;
+    }
+
+    /**
+     * Checks whether there are any duplicated edges
+     * @param graph
+     */
+    public boolean structureValidator4( GraphIndividual graph ) {
+    	for (Edge e1 : graph.edgeList) {
+    		for (Edge e2 : graph.edgeList) {
+    			if (e1 != e2 && e1.getFromNode().getName().equals(e2.getFromNode().getName()) && e1.getToNode().getName().equals(e2.getToNode().getName())) {
+    				System.out.println(String.format("Edge '%s' has a duplicate.", e1));
+    				return false;
+    			}
+    		}
+    	}
+        System.out.println("----------------------------------------------4");
+        return true;
     }
 }
