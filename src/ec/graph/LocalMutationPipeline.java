@@ -53,7 +53,7 @@ public class LocalMutationPipeline extends BreedingPipeline {
             GraphIndividual graph = (GraphIndividual)inds[q];
             GraphSpecies species = (GraphSpecies) graph.species;
 
-            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph)) {
+            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph) || !species.structureValidator5(graph) || !species.structureValidator6(graph)) {
             	System.out.println("Oops!");
             }
 
@@ -82,8 +82,8 @@ public class LocalMutationPipeline extends BreedingPipeline {
 
 
             removeMutationNodes(init.numNodesMutation, selected, graph, taskInput, taskOutput, disconnectedInput, disconnectedOutput);
-            
-            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph)) {
+
+            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph) || !species.structureValidator6(graph)) {
                 System.out.println("Oops!");
             }
 
@@ -91,25 +91,24 @@ public class LocalMutationPipeline extends BreedingPipeline {
             Set<Node> nodesToConsider = new HashSet<Node>(init.relevant);
             nodesToConsider.removeAll(graph.nodeMap.values());
             GraphIndividual subgraph = species.createNewGraph( null, state, localStartNode, localEndNode, nodesToConsider );
-            
-            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph)) {
+
+            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph) || !species.structureValidator6(graph)) {
                 System.out.println("Oops!");
             }
 
             // Add the new subgraph into the existing candidate
             species.fitMutatedSubgraph(init, graph, subgraph, disconnectedInput, disconnectedOutput);
-            
-            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph)) {
+
+            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph) || !species.structureValidator5(graph) || !species.structureValidator6(graph)) {
                 System.out.println("Oops!");
             }
 
-//            species.structureValidator1(graph);
-//            species.structureValidator2(graph);
-//            species.structureValidator3(graph);
-//            species.structureValidator4(graph);
-
             // Remove any dangling nodes
             init.removeDanglingNodes( graph );
+
+            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph) || !species.structureValidator5(graph) || !species.structureValidator6(graph)) {
+            	System.out.println("Oops!");
+            }
         }
 
         return n;
@@ -182,7 +181,14 @@ public class LocalMutationPipeline extends BreedingPipeline {
             // Else if edge is going to a service that has not been deleted, add its values as required outputs
             else if(graph.nodeMap.containsKey( edge.getToNode().getName())){
                 taskOutput.addAll( edge.getIntersect());
-                disconnectedInput.put(graph.nodeMap.get(edge.getToNode().getName()), edge.getIntersect());
+                Set<String> discInputs = disconnectedInput.get(graph.nodeMap.get(edge.getToNode().getName()));
+                if (discInputs == null) {
+                	discInputs = new HashSet<String>(edge.getIntersect());
+                	disconnectedInput.put(graph.nodeMap.get(edge.getToNode().getName()), discInputs);
+                }
+                else {
+                	discInputs.addAll(edge.getIntersect());
+                }
             }
         }
     }

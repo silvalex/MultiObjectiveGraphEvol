@@ -25,7 +25,7 @@ public class GraphSpecies extends Species {
 	    GraphInitializer init = (GraphInitializer) state.initializer;
 	    GraphIndividual graph = createNewGraph(null, state, init.startNode.clone(), init.endNode.clone(), init.relevant);
 
-        if (!structureValidator1(graph) || !structureValidator2(graph) || !structureValidator3(graph) || !structureValidator4(graph)) {
+        if (!structureValidator1(graph) || !structureValidator2(graph) || !structureValidator3(graph) || !structureValidator4(graph) || !structureValidator5(graph) || !structureValidator6(graph)) {
         	System.out.println("We've created a monster!");
         }
 
@@ -111,7 +111,7 @@ public class GraphSpecies extends Species {
 
 		// Check if the start node should be considered
 		Node start = newGraph.nodeMap.get("start");
-		
+
 		if (fromNodes == null || fromNodes.contains(start)) {
     		for(String output : start.getOutputs()) {
     			Set<String> inputVals = init.taxonomyMap.get(output).servicesWithInput.get(candidate);
@@ -120,7 +120,7 @@ public class GraphSpecies extends Species {
     				startIntersect.addAll(inputVals);
     			}
     		}
-    
+
     		if (!startIntersect.isEmpty()) {
     			Edge startEdge = new Edge(startIntersect);
     			startEdge.setFromNode(start);
@@ -137,7 +137,7 @@ public class GraphSpecies extends Species {
     				if (newGraph.nodeMap.containsKey(s.getName())) {
     					Set<String> intersect = new HashSet<String>();
     					intersect.add(input);
-    
+
     					Edge mapEdge = connections.get(s.getName());
     					if (mapEdge == null) {
     						Edge e = new Edge(intersect);
@@ -146,7 +146,7 @@ public class GraphSpecies extends Species {
     						connections.put(e.getFromNode().getName(), e);
     					} else
     						mapEdge.getIntersect().addAll(intersect);
-    
+
     					found = true;
     					break;
     				}
@@ -244,13 +244,13 @@ public class GraphSpecies extends Species {
 
     public boolean checkNewGraphNode(GraphInitializer init, GraphIndividual graph, Node n, String input, Map<String,Edge> connections, Set<Node> fromNodes) {
     	boolean foundMatch = false;
-    
+
     	// Check if start node should be considered as a candidate
     	Node start = graph.nodeMap.get("start");
     	if(fromNodes.contains(start)) {
-    	    
+
     	    Set<String> startIntersect = new HashSet<String>();
-    	    
+
             for(String output : start.getOutputs()) {
                 Set<String> inputVals = init.taxonomyMap.get(output).servicesWithInput.get(n);
                 if (inputVals != null) {
@@ -267,7 +267,7 @@ public class GraphSpecies extends Species {
                 return true;
             }
     	}
-    		
+
     	for (Node candidate : init.taxonomyMap.get(input).servicesWithOutput){
     		if (fromNodes.contains(candidate)) {
 
@@ -286,7 +286,7 @@ public class GraphSpecies extends Species {
                 }
                 else
                     mapEdge.getIntersect().addAll(intersect);
-                
+
                 break;
     		}
         }
@@ -327,15 +327,15 @@ public class GraphSpecies extends Species {
 
         // Match first subgraph layer with nodes from main graph whose output has been disconnected
         Map<String,Edge> connections = new HashMap<String,Edge>();
-        
+
         for (Entry <Node, Set<String>> entry: firstSubgraphLayer.entrySet()) {
             connections.clear();
             Node n = graph.nodeMap.get( entry.getKey().getName() );
-            
+
             // Find all input connections
             if (!checkCandidateNodeSatisfied(init, connections, graph, n, entry.getValue(), disconnectedOutput))
                 throw new RuntimeException("Cannot satisfy subgraph outputs.");
-            
+
             // Connect it to graph
             for (Edge e : connections.values()) {
                 graph.edgeList.add(e);
@@ -348,11 +348,11 @@ public class GraphSpecies extends Species {
         // Match last subgraph layer with nodes from main graph whose input has been disconnected
         for (Entry<Node, Set<String>> entry : disconnectedInput.entrySet()) {
             connections.clear();
-            
+
             // Find all input connections
             if (!checkCandidateNodeSatisfied(init, connections, graph, entry.getKey(), entry.getValue(), lastSubgraphLayer))
                 throw new RuntimeException("Cannot satisfy subgraph outputs.");
-        	
+
             // Connect it to graph
             for (Edge e : connections.values()) {
                 graph.edgeList.add(e);
@@ -367,7 +367,7 @@ public class GraphSpecies extends Species {
         Edge newE = new Edge(e.getIntersect());
         newE.setFromNode( destGraph.nodeMap.get( e.getFromNode().getName() ) );
         newE.setToNode( destGraph.nodeMap.get( e.getToNode().getName() ) );
-        
+
         destGraph.nodeMap.get( e.getFromNode().getName() ).getOutgoingEdgeList().add(newE);
         destGraph.nodeMap.get( e.getToNode().getName() ).getIncomingEdgeList().add(newE);
 
@@ -484,5 +484,53 @@ public class GraphSpecies extends Species {
     	}
         System.out.println("----------------------------------------------4");
         return true;
+    }
+
+    /**
+     * Checks if the total number of inputs provided by the incoming edges matches the total number
+     * of inputs required by a given node, across all nodes in the graph.
+     *
+     * @param graph
+     * @return
+     */
+    public boolean structureValidator5( GraphIndividual graph ) {
+    	for (Node n : graph.nodeMap.values()) {
+    		Set<String> incomingValues = new HashSet<String>();
+    		for (Edge e : n.getIncomingEdgeList()) {
+    			incomingValues.addAll(e.getIntersect());
+    		}
+
+    		if (incomingValues.size() != n.getInputs().size()) {
+    			System.out.println(String.format("Not all inputs of node '%s' are being satisfied.", n));
+    			return false;
+    		}
+    	}
+        System.out.println("----------------------------------------------5");
+    	return true;
+    }
+
+    /**
+     * Checks if our graph has start and end nodes.
+     *
+     * @param graph
+     * @return
+     */
+    public boolean structureValidator6( GraphIndividual graph ) {
+    	if (!graph.nodeMap.containsKey("start")) {
+    		System.out.println(String.format("The graph doesn't have a start node."));
+    		return false;
+    	}
+    	else if (!graph.nodeMap.containsKey("end")) {
+    		System.out.println(String.format("The graph doesn't have an end node."));
+    		return false;
+    	}
+    	return true;
+    }
+
+    public boolean structureValidator7( GraphIndividual graph ) {
+    	for (Node n : graph.nodeMap.values()) {
+
+    	}
+    	return true;
     }
 }
