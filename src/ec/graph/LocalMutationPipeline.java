@@ -19,6 +19,7 @@ import ec.util.Parameter;
  * @author Alex
  */
 public class LocalMutationPipeline extends BreedingPipeline {
+    public static int counter = 0;
 
     @Override
     public Parameter defaultBase() {
@@ -33,6 +34,7 @@ public class LocalMutationPipeline extends BreedingPipeline {
     @Override
     public int produce( int min, int max, int start, int subpopulation,
             Individual[] inds, EvolutionState state, int thread) {
+        counter++;
 
         GraphInitializer init = (GraphInitializer) state.initializer;
 
@@ -139,13 +141,15 @@ public class LocalMutationPipeline extends BreedingPipeline {
         for (int i = 0; i < numNodes; i++) {
              Node current = queue.poll();
 
-             if(current.getName().equals( "end" )){
+             if(current == null || current.getName().equals( "end" )){
                  break;
              }
              else {
                  mutationNodes.add(current);
                  for(Edge e : current.getOutgoingEdgeList()){
-                     queue.offer( e.getToNode() );
+                     if (e.getToNode().getIncomingEdgeList().size() == 1) {
+                         queue.offer( e.getToNode() );
+                     }
                  }
              }
         }
