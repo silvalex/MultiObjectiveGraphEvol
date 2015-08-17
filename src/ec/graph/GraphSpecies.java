@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -375,6 +377,41 @@ public class GraphSpecies extends Species {
         destGraph.considerableEdgeList.add(newE);
     }
 
+    public Set<Node> selectNodes(Node root, int numNodes) {
+
+    	Set<Node> nodes = new HashSet<Node>();
+
+        Queue<Node> queue = new LinkedList<Node>();
+        queue.offer( root );
+
+        for (int i = 0; i < numNodes; i++) {
+             Node current = queue.poll();
+
+             if(current == null || current.getName().equals( "end" )){
+                 break;
+             }
+             else {
+                 nodes.add(current);
+                 for(Edge e : current.getOutgoingEdgeList()){
+
+                	 // Check that node is entirely fulfilled by nodes already selected
+                	 boolean isInternal = true;
+                	 for (Edge incomingList : e.getToNode().getIncomingEdgeList()) {
+                		 if (!nodes.contains(incomingList.getFromNode())) {
+                			isInternal = false;
+                			break;
+                		 }
+                	 }
+
+                     if (isInternal) {
+                         queue.offer( e.getToNode() );
+                     }
+                 }
+             }
+        }
+        return nodes;
+    }
+
 	//==========================================================================================================================
 	//                                                 Debugging Routines
 	//==========================================================================================================================
@@ -413,7 +450,7 @@ public class GraphSpecies extends Species {
                 return false;
             }
         }
-        System.out.println("----------------------------------------------1");
+        //System.out.println("----------------------------------------------1");
         return true;
     }
 
@@ -449,7 +486,7 @@ public class GraphSpecies extends Species {
                 return false;
             }
         }
-        System.out.println("----------------------------------------------2");
+        //System.out.println("----------------------------------------------2");
         return true;
     }
 
@@ -465,7 +502,7 @@ public class GraphSpecies extends Species {
     			return false;
     		}
     	}
-        System.out.println("----------------------------------------------3");
+        //System.out.println("----------------------------------------------3");
         return true;
     }
 
@@ -482,7 +519,7 @@ public class GraphSpecies extends Species {
     			}
     		}
     	}
-        System.out.println("----------------------------------------------4");
+        //System.out.println("----------------------------------------------4");
         return true;
     }
 
@@ -505,7 +542,7 @@ public class GraphSpecies extends Species {
     			return false;
     		}
     	}
-        System.out.println("----------------------------------------------5");
+        //System.out.println("----------------------------------------------5");
     	return true;
     }
 

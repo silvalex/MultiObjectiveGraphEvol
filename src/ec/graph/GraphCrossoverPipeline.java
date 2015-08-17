@@ -76,7 +76,7 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
         		Set<Node> disconnectedInput2 = new HashSet<Node>();
 
         		// Identify the half of each graph, and sever each graph into two
-        		GraphIndividual g1Beginning = null, g1End = null, g2Beginning = null, g2End = null;
+        		GraphIndividual g1Beginning = new GraphIndividual(), g1End = new GraphIndividual(), g2Beginning = new GraphIndividual(), g2End = new GraphIndividual();
         		Set<Node> endLayer1 = severGraph(g1, g1Beginning, g1End, disconnectedInput1);
         		Set<Node> endLayer2 = severGraph(g2, g2Beginning, g2End, disconnectedInput2);
 
@@ -95,7 +95,6 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
     }
 
     private Set<Node> severGraph(GraphIndividual graph, GraphIndividual graphBeginning, GraphIndividual graphEnd, Set<Node> disconnectedInput) {
-    	graphBeginning = new GraphIndividual();
     	Set<Node> firstLayerEnd = new HashSet<Node>();
 
         // Find first half of the graph
@@ -107,21 +106,36 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
         for (int i = 1; i < numNodes; i++) {
              Node current = queue.poll();
 
-             // Add current node and associated edges to graphBeginning
-             graphBeginning.nodeMap.put(current.getName(),current);
-             graphBeginning.considerableNodeMap.put(current.getName(), current);
-             graphBeginning.edgeList.addAll(current.getOutgoingEdgeList());
-             graphBeginning.considerableEdgeList.addAll(current.getOutgoingEdgeList());
+             if(current == null || current.getName().equals( "end" )){
+                 break;
+             }
+             else {
+	             // Add current node and associated edges to graphBeginning
+	             graphBeginning.nodeMap.put(current.getName(),current);
+	             graphBeginning.considerableNodeMap.put(current.getName(), current);
+	             graphBeginning.edgeList.addAll(current.getOutgoingEdgeList());
+	             graphBeginning.considerableEdgeList.addAll(current.getOutgoingEdgeList());
 
-             // Remove current node and associated edges from graph
-             graph.nodeMap.remove(current.getName());
-             graph.considerableNodeMap.remove(current.getName());
-             graph.edgeList.removeAll(current.getOutgoingEdgeList());
-             graph.considerableEdgeList.removeAll(current.getOutgoingEdgeList());
+	             // Remove current node and associated edges from graph
+	             graph.nodeMap.remove(current.getName());
+	             graph.considerableNodeMap.remove(current.getName());
+	             graph.edgeList.removeAll(current.getOutgoingEdgeList());
+	             graph.considerableEdgeList.removeAll(current.getOutgoingEdgeList());
 
-             // Add next nodes to the queue
-             for(Edge e : current.getOutgoingEdgeList()){
-                 queue.offer( e.getToNode() );
+	             // Add next nodes to the queue
+	             for(Edge e : current.getOutgoingEdgeList()){
+
+	            	// Check that node is entirely fulfilled by nodes already selected
+	            	 boolean isInternal = true;
+	            	 for (Edge incomingList : e.getToNode().getIncomingEdgeList()) {
+	            		 if (!graphBeginning.nodeMap.containsKey(incomingList.getFromNode().getName())) {
+	            			isInternal = false;
+	            			break;
+	            		 }
+	            	 }
+	            	 if (isInternal)
+	            		 queue.offer( e.getToNode() );
+	             }
              }
 
         }
@@ -156,15 +170,27 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
     	GraphIndividual finalGraph = firstHalf;
 
     	for(Node n: secondHalf.nodeMap.values()) {
-            finalGraph.nodeMap.put( n.getName(), n );
-            finalGraph.considerableNodeMap.put( n.getName(), n );
+
+			Node graphN = finalGraph.nodeMap.get(n.getName());
+
+    		if (graphN == null) {
+    			finalGraph.nodeMap.put( n.getName(), n );
+    			finalGraph.considerableNodeMap.put( n.getName(), n );
+    		}
 
             for (Edge e : n.getIncomingEdgeList()){
+            	if (graphN != null && !graphN.getIncomingEdgeList().contains(e)) {
+
+            		graphN.getIncomingEdgeList().add(e);
+            	}
             	finalGraph.edgeList.add(e);
             	finalGraph.considerableEdgeList.add(e);
             }
 
             for(Edge e : n.getOutgoingEdgeList()){
+            	if (graphN != null && !graphN.getOutgoingEdgeList().contains(e)) {
+            		graphN.getOutgoingEdgeList().add(e);
+            	}
             	finalGraph.edgeList.add(e);
             	finalGraph.considerableEdgeList.add(e);
             }

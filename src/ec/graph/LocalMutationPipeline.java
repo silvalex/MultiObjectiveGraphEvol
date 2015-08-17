@@ -55,10 +55,6 @@ public class LocalMutationPipeline extends BreedingPipeline {
             GraphIndividual graph = (GraphIndividual)inds[q];
             GraphSpecies species = (GraphSpecies) graph.species;
 
-            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph) || !species.structureValidator5(graph) || !species.structureValidator6(graph)) {
-            	System.out.println("Oops!");
-            }
-
             List<Node> nodeList = new ArrayList<Node>(graph.nodeMap.values());
             nodeList.remove(graph.nodeMap.get("start"));
             nodeList.remove(graph.nodeMap.get("end"));
@@ -83,34 +79,18 @@ public class LocalMutationPipeline extends BreedingPipeline {
             Set<Node> disconnectedOutput = new HashSet<Node>();
 
 
-            removeMutationNodes(init.numNodesMutation, selected, graph, taskInput, taskOutput, disconnectedInput, disconnectedOutput);
-
-            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph) || !species.structureValidator6(graph)) {
-                System.out.println("Oops!");
-            }
+            removeMutationNodes(species, init.numNodesMutation, selected, graph, taskInput, taskOutput, disconnectedInput, disconnectedOutput);
 
             // Generate the new subgraph
             Set<Node> nodesToConsider = new HashSet<Node>(init.relevant);
             nodesToConsider.removeAll(graph.nodeMap.values());
             GraphIndividual subgraph = species.createNewGraph( null, state, localStartNode, localEndNode, nodesToConsider );
 
-            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph) || !species.structureValidator6(graph)) {
-                System.out.println("Oops!");
-            }
-
             // Add the new subgraph into the existing candidate
             species.fitMutatedSubgraph(init, graph, subgraph, disconnectedInput, disconnectedOutput);
 
-            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph) || !species.structureValidator5(graph) || !species.structureValidator6(graph)) {
-                System.out.println("Oops!");
-            }
-
             // Remove any dangling nodes
             init.removeDanglingNodes( graph );
-
-            if (!species.structureValidator1(graph) || !species.structureValidator2(graph) || !species.structureValidator3(graph) || !species.structureValidator4(graph) || !species.structureValidator5(graph) || !species.structureValidator6(graph)) {
-            	System.out.println("Oops!");
-            }
         }
 
         return n;
@@ -128,31 +108,11 @@ public class LocalMutationPipeline extends BreedingPipeline {
      * @param taskInput - Set to collect the inputs required by the removed subpart
      * @param taskOutput - Set to collect the outputs required by the removed subpart
      */
-    private void removeMutationNodes(int numNodes, Node selected, GraphIndividual graph, Set<String> taskInput, Set<String> taskOutput, Map<Node, Set<String>> disconnectedInput, Set<Node> disconnectedOutput) {
+    private void removeMutationNodes(GraphSpecies species, int numNodes, Node selected, GraphIndividual graph, Set<String> taskInput, Set<String> taskOutput, Map<Node, Set<String>> disconnectedInput, Set<Node> disconnectedOutput) {
         if (numNodes < 1)
             throw new RuntimeException(String.format("The number of nodes requested to be removed during mutation was %d; it should always greater than 0.", numNodes));
 
-        Set<Node> mutationNodes = new HashSet<Node>();
-
-        // Find mutation nodes to remove
-        Queue<Node> queue = new LinkedList<Node>();
-        queue.offer( selected );
-
-        for (int i = 0; i < numNodes; i++) {
-             Node current = queue.poll();
-
-             if(current == null || current.getName().equals( "end" )){
-                 break;
-             }
-             else {
-                 mutationNodes.add(current);
-                 for(Edge e : current.getOutgoingEdgeList()){
-                     if (e.getToNode().getIncomingEdgeList().size() == 1) {
-                         queue.offer( e.getToNode() );
-                     }
-                 }
-             }
-        }
+        Set<Node> mutationNodes = species.selectNodes(selected, numNodes);
 
         // Now remove all selected mutation nodes and associated edges
         Set<Edge> mutationEdges = new HashSet<Edge>();
