@@ -18,6 +18,7 @@ import ec.util.Parameter;
  * @author Alex
  */
 public class GraphCrossoverPipeline extends BreedingPipeline {
+    public static int counter = 0;
 
     @Override
     public Parameter defaultBase() {
@@ -32,6 +33,7 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
     @Override
     public int produce(int min, int max, int start, int subpopulation,
             Individual[] inds, EvolutionState state, int thread) {
+        counter++;
 
 		GraphInitializer init = (GraphInitializer) state.initializer;
 		GraphSpecies species = null;
@@ -76,25 +78,33 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
         		Set<Node> disconnectedInput2 = new HashSet<Node>();
 
         		// Identify the half of each graph, and sever each graph into two
-        		GraphIndividual g1Beginning = new GraphIndividual(), g1End = new GraphIndividual(), g2Beginning = new GraphIndividual(), g2End = new GraphIndividual();
-        		Set<Node> endLayer1 = severGraph(g1, g1Beginning, g1End, disconnectedInput1);
-        		Set<Node> endLayer2 = severGraph(g2, g2Beginning, g2End, disconnectedInput2);
+        		GraphIndividual g1Beginning = new GraphIndividual(), g2Beginning = new GraphIndividual();
+        		// After severing the graph, g1 and g2 will contain the second halves of graphs only
+        		Set<Node> endLayer1 = severGraph(g1, g1Beginning, disconnectedInput1);
+        		Set<Node> endLayer2 = severGraph(g2, g2Beginning, disconnectedInput2);
 
-        		GraphIndividual child1 = connectGraphHalves(state, init, species, g1Beginning, g2End, endLayer2); // Create first child
-        		GraphIndividual child2 = connectGraphHalves(state, init, species, g2Beginning, g1End, endLayer1); // Create second child
+        		GraphIndividual child1 = connectGraphHalves(state, init, species, g1Beginning, g2, endLayer2); // Create first child
+        		GraphIndividual child2 = connectGraphHalves(state, init, species, g2Beginning, g1, endLayer1); // Create second child
 
         		// Incorporate children into population, after having removed any dangling nodes
         		init.removeDanglingNodes( child1 );
         		init.removeDanglingNodes( child2 );
+        		
+        		if(!species.structureValidator1( child1 ) || !species.structureValidator2( child1 ) || !species.structureValidator4( child1 ) || !species.structureValidator5( child1 ) || !species.structureValidator6( child1 ))
+        		    System.out.println("Bah");
+                if(!species.structureValidator1( child2 ) || !species.structureValidator2( child2 ) || !species.structureValidator4( child2 ) || !species.structureValidator5( child2 ) || !species.structureValidator6( child2 ))
+                    System.out.println("Bah");
         		inds[q] = child1;
-        		inds[q+1] = child2;
-	        	inds[q].evaluated = false;
-	        	inds[q+1].evaluated = false;
+        		inds[q++].evaluated = false;
+        		if (q < nMin + start) {
+        		    inds[q] = child2;
+        		    inds[q++].evaluated = false;
+        		}
         }
         return nMin;
     }
 
-    private Set<Node> severGraph(GraphIndividual graph, GraphIndividual graphBeginning, GraphIndividual graphEnd, Set<Node> disconnectedInput) {
+    private Set<Node> severGraph(GraphIndividual graph, GraphIndividual graphBeginning, Set<Node> disconnectedInput) {
     	Set<Node> firstLayerEnd = new HashSet<Node>();
 
         // Find first half of the graph
@@ -103,7 +113,7 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
         Queue<Node> queue = new LinkedList<Node>();
         queue.offer( graph.nodeMap.get("start") );
 
-        for (int i = 1; i < numNodes; i++) {
+        for (int i = 0; i < numNodes; i++) {
              Node current = queue.poll();
 
              if(current == null || current.getName().equals( "end" )){
@@ -137,11 +147,7 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
 	            		 queue.offer( e.getToNode() );
 	             }
              }
-
         }
-
-        // Original graph now only has the second half, so assign it to graphEnd
-        graphEnd = graph;
 
         Iterator<Edge> it = graphBeginning.edgeList.iterator();
 
@@ -180,9 +186,9 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
 
             for (Edge e : n.getIncomingEdgeList()){
             	if (graphN != null && !graphN.getIncomingEdgeList().contains(e)) {
-
             		graphN.getIncomingEdgeList().add(e);
             	}
+            	
             	finalGraph.edgeList.add(e);
             	finalGraph.considerableEdgeList.add(e);
             }
@@ -191,8 +197,8 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
             	if (graphN != null && !graphN.getOutgoingEdgeList().contains(e)) {
             		graphN.getOutgoingEdgeList().add(e);
             	}
-            	finalGraph.edgeList.add(e);
-            	finalGraph.considerableEdgeList.add(e);
+            	//finalGraph.edgeList.add(e);
+            	//finalGraph.considerableEdgeList.add(e);
             }
     	}
 
@@ -214,6 +220,14 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
     				inputs.add(input);
     			}
     		}
+    		
+    		// Make connections of inputs already satisfied
+            for (Edge e : connections.values()) {
+                finalGraph.edgeList.add(e);
+                finalGraph.considerableEdgeList.add(e);
+                e.getFromNode().getOutgoingEdgeList().add(e);
+                e.getToNode().getIncomingEdgeList().add(e);
+            }
     	}
 
     	// If not completely satisfied, create a subproblem that we solve in order to create the remaining connections
