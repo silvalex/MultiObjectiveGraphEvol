@@ -67,13 +67,28 @@ public class GraphIndividual extends Individual {
 		return builder.toString();
 	}
 
-//	@Override
-//	public GraphIndividual clone() {
-//		GraphIndividual newG = new GraphIndividual();
-//		newG.longestPathLength = longestPathLength;
-//		newG.numAtomicServices = numAtomicServices;
-//
-//		return newG;
-//	}
-
+	/**
+	 * Copies this graph structure to another GraphIndividual object.
+	 * 
+	 * @param other
+	 */
+    public void copyTo(GraphIndividual other) {
+        for (Node n : nodeMap.values()) {
+            Node newN = n.clone();
+            other.nodeMap.put( newN.getName(), newN );
+            other.considerableNodeMap.put( newN.getName(), newN );
+        }
+        
+        for (Edge e: edgeList) {
+            Edge newE = new Edge(e.getIntersect());
+            other.edgeList.add(newE);
+            other.considerableEdgeList.add( newE );
+            Node newFromNode = other.nodeMap.get( e.getFromNode().getName() );
+            newE.setFromNode( newFromNode );
+            newFromNode.getOutgoingEdgeList().add( newE );
+            Node newToNode = other.nodeMap.get( e.getToNode().getName() );
+            newE.setToNode( newToNode );
+            newToNode.getIncomingEdgeList().add( newE );
+        }
+    }
 }

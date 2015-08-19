@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 
@@ -78,21 +79,28 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
         		Set<Node> disconnectedInput2 = new HashSet<Node>();
 
         		// Identify the half of each graph, and sever each graph into two
-        		GraphIndividual g1Beginning = new GraphIndividual(), g2Beginning = new GraphIndividual();
-        		// After severing the graph, g1 and g2 will contain the second halves of graphs only
-        		Set<Node> endLayer1 = severGraph(g1, g1Beginning, disconnectedInput1);
-        		Set<Node> endLayer2 = severGraph(g2, g2Beginning, disconnectedInput2);
+        		GraphIndividual g1Beginning = new GraphIndividual(), g1End = new GraphIndividual(), g2Beginning = new GraphIndividual(), g2End = new GraphIndividual();
+        		Map<Node, Set<String>> endLayer1 = severGraph(g1, g1Beginning, g1End, disconnectedInput1, species);
+        		Map<Node, Set<String>> endLayer2 = severGraph(g2, g2Beginning, g2End, disconnectedInput2, species);
+        		if (!species.structureValidator3( g1Beginning ))
+        		    System.out.println();
+        		if (!species.structureValidator3( g1End ))
+        		    System.out.println();
+        		if (!species.structureValidator3( g2Beginning ))
+        		    System.out.println();
+        		if (!species.structureValidator3( g2End ))
+        		    System.out.println();
 
-        		GraphIndividual child1 = connectGraphHalves(state, init, species, g1Beginning, g2, endLayer2); // Create first child
-        		GraphIndividual child2 = connectGraphHalves(state, init, species, g2Beginning, g1, endLayer1); // Create second child
+        		GraphIndividual child1 = connectGraphHalves(state, init, species, g1Beginning, g2End, endLayer2); // Create first child
+        		GraphIndividual child2 = connectGraphHalves(state, init, species, g2Beginning, g1End, endLayer1); // Create second child
 
         		// Incorporate children into population, after having removed any dangling nodes
         		init.removeDanglingNodes( child1 );
         		init.removeDanglingNodes( child2 );
         		
-        		if(!species.structureValidator1( child1 ) || !species.structureValidator2( child1 ) || !species.structureValidator4( child1 ) || !species.structureValidator5( child1 ) || !species.structureValidator6( child1 ))
+        		if(!species.structureValidator1( child1 ) || !species.structureValidator3( child1 ) || !species.structureValidator4( child1 ) || !species.structureValidator5( child1 ) || !species.structureValidator6( child1 ))
         		    System.out.println("Bah");
-                if(!species.structureValidator1( child2 ) || !species.structureValidator2( child2 ) || !species.structureValidator4( child2 ) || !species.structureValidator5( child2 ) || !species.structureValidator6( child2 ))
+                if(!species.structureValidator1( child2 ) || !species.structureValidator3( child2 ) || !species.structureValidator4( child2 ) || !species.structureValidator5( child2 ) || !species.structureValidator6( child2 ))
                     System.out.println("Bah");
         		inds[q] = child1;
         		inds[q++].evaluated = false;
@@ -104,14 +112,17 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
         return nMin;
     }
 
-    private Set<Node> severGraph(GraphIndividual graph, GraphIndividual graphBeginning, Set<Node> disconnectedInput) {
-    	Set<Node> firstLayerEnd = new HashSet<Node>();
+    private Map<Node, Set<String>> severGraph(GraphIndividual graph, GraphIndividual graphBeginning, GraphIndividual graphEnd, Set<Node> disconnectedInput, GraphSpecies species) {
+    	Map<Node, Set<String>> firstLayerEnd = new HashMap<Node, Set<String>>();
+    	
+    	// Copy graph to graphEnd
+    	graph.copyTo(graphEnd);
 
         // Find first half of the graph
-    	int numNodes = graph.nodeMap.size() / 2;
+    	int numNodes = graphEnd.nodeMap.size() / 2;
 
         Queue<Node> queue = new LinkedList<Node>();
-        queue.offer( graph.nodeMap.get("start") );
+        queue.offer( graphEnd.nodeMap.get("start") );
 
         for (int i = 0; i < numNodes; i++) {
              Node current = queue.poll();
@@ -126,11 +137,11 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
 	             graphBeginning.edgeList.addAll(current.getOutgoingEdgeList());
 	             graphBeginning.considerableEdgeList.addAll(current.getOutgoingEdgeList());
 
-	             // Remove current node and associated edges from graph
-	             graph.nodeMap.remove(current.getName());
-	             graph.considerableNodeMap.remove(current.getName());
-	             graph.edgeList.removeAll(current.getOutgoingEdgeList());
-	             graph.considerableEdgeList.removeAll(current.getOutgoingEdgeList());
+	             // Remove current node and associated edges from graphEnd
+	             graphEnd.nodeMap.remove(current.getName());
+	             graphEnd.considerableNodeMap.remove(current.getName());
+	             graphEnd.edgeList.removeAll(current.getOutgoingEdgeList());
+	             graphEnd.considerableEdgeList.removeAll(current.getOutgoingEdgeList());
 
 	             // Add next nodes to the queue
 	             for(Edge e : current.getOutgoingEdgeList()){
@@ -163,17 +174,25 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
         		current.getFromNode().getOutgoingEdgeList().remove(current);
 
         		// Also remove this edge from the node in the second graph
-        		current.getToNode().getIncomingEdgeList().remove(current);
-        		firstLayerEnd.add(current.getToNode());
+        		Node toNode = current.getToNode();
+        		toNode.getIncomingEdgeList().remove( current );
+        		
+        		Set<String> inputs = firstLayerEnd.get( toNode );
+        		if (inputs == null) {
+        		    inputs = new HashSet<String>();
+        		    firstLayerEnd.put( toNode, inputs );
+        		}
+        		inputs.addAll( current.getIntersect() );
         	}
         }
         return firstLayerEnd;
     }
 
-    private GraphIndividual connectGraphHalves(EvolutionState state, GraphInitializer init, GraphSpecies species, GraphIndividual firstHalf, GraphIndividual secondHalf, Set<Node> secondHalfLayer){
+    private GraphIndividual connectGraphHalves(EvolutionState state, GraphInitializer init, GraphSpecies species, GraphIndividual firstHalf, GraphIndividual secondHalf, Map<Node,Set<String>> secondHalfLayer){
 
     	// Add both halves to the final graph
-    	GraphIndividual finalGraph = firstHalf;
+        GraphIndividual finalGraph = new GraphIndividual();
+        firstHalf.copyTo( finalGraph );
 
     	for(Node n: secondHalf.nodeMap.values()) {
 
@@ -183,22 +202,24 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
     			finalGraph.nodeMap.put( n.getName(), n );
     			finalGraph.considerableNodeMap.put( n.getName(), n );
     		}
+    		else {
+    		    // If already fulfilled, it is no longer in the secondHalfLayer boundary
+    		    secondHalfLayer.remove( n );
+    		}
 
             for (Edge e : n.getIncomingEdgeList()){
             	if (graphN != null && !graphN.getIncomingEdgeList().contains(e)) {
             		graphN.getIncomingEdgeList().add(e);
             	}
             	
-            	finalGraph.edgeList.add(e);
-            	finalGraph.considerableEdgeList.add(e);
+        	    finalGraph.edgeList.add(e);
+        	    finalGraph.considerableEdgeList.add(e);
             }
 
             for(Edge e : n.getOutgoingEdgeList()){
             	if (graphN != null && !graphN.getOutgoingEdgeList().contains(e)) {
             		graphN.getOutgoingEdgeList().add(e);
             	}
-            	//finalGraph.edgeList.add(e);
-            	//finalGraph.considerableEdgeList.add(e);
             }
     	}
 
@@ -207,15 +228,15 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
     	Map<Node,Set<String>> inputsNotSatisfied = new HashMap<Node, Set<String>>();
 
     	Set<Node> firstHalfNodes = new HashSet<Node>(firstHalf.nodeMap.values());
-    	for (Node n : secondHalfLayer) {
+    	for (Entry<Node,Set<String>> entry : secondHalfLayer.entrySet()) {
     		connections.clear();
-    		for (String input : n.getInputs()) {
-    			boolean satisfied = species.checkNewGraphNode(init, finalGraph, n, input, connections, firstHalfNodes);
+    		for (String input : entry.getValue()) {
+    			boolean satisfied = species.checkNewGraphNode(init, finalGraph, entry.getKey(), input, connections, firstHalfNodes);
     			if (!satisfied) {
-    				Set<String> inputs = inputsNotSatisfied.get(n);
+    				Set<String> inputs = inputsNotSatisfied.get(entry.getKey());
     				if (inputs == null) {
     					inputs = new HashSet<String>();
-    					inputsNotSatisfied.put(n, inputs);
+    					inputsNotSatisfied.put(entry.getKey(), inputs);
     				}
     				inputs.add(input);
     			}
@@ -223,11 +244,23 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
     		
     		// Make connections of inputs already satisfied
             for (Edge e : connections.values()) {
-                finalGraph.edgeList.add(e);
-                finalGraph.considerableEdgeList.add(e);
-                e.getFromNode().getOutgoingEdgeList().add(e);
-                e.getToNode().getIncomingEdgeList().add(e);
-            }
+                
+                if (!finalGraph.edgeList.contains( e )) {
+                    finalGraph.edgeList.add(e);
+                    finalGraph.considerableEdgeList.add(e);
+                    e.getFromNode().getOutgoingEdgeList().add(e);
+                    e.getToNode().getIncomingEdgeList().add(e);
+                }
+                // If edge already exists, we should just add the additional values to the intersect
+                else {
+                    for (Edge existing : e.getFromNode().getOutgoingEdgeList()) {
+                        if (existing.equals( e )) {
+                            existing.getIntersect().addAll( e.getIntersect() );
+                            break;
+                        }
+                    }
+                }
+            }            
     	}
 
     	// If not completely satisfied, create a subproblem that we solve in order to create the remaining connections
