@@ -26,11 +26,6 @@ public class GraphSpecies extends Species {
 	public Individual newIndividual(EvolutionState state, int thread) {
 	    GraphInitializer init = (GraphInitializer) state.initializer;
 	    GraphIndividual graph = createNewGraph(null, state, init.startNode.clone(), init.endNode.clone(), init.relevant);
-
-        if (!structureValidator1(graph) || !structureValidator2(graph) || !structureValidator3(graph) || !structureValidator4(graph) || !structureValidator5(graph) || !structureValidator6(graph)) {
-        	System.out.println("We've created a monster!");
-        }
-
 		return graph;
 	}
 
@@ -498,7 +493,7 @@ public class GraphSpecies extends Species {
     public boolean structureValidator3( GraphIndividual graph ) {
     	for (Edge e : graph.edgeList) {
     		if (e.getFromNode().getName().equals(e.getToNode().getName())) {
-    			System.out.println(String.format("Edge '%s makes a loop.", e));
+    			System.out.println(String.format("Edge '%s' makes a loop.", e));
     			return false;
     		}
     	}
