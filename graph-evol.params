@@ -19,6 +19,7 @@ checkpoint		        = false
 checkpoint-prefix	    = ec
 checkpoint-modulo	    = 1
 stat.file		        = $out.stat
+stat.histogram          = $hist.stat
 stat.do-time            = true
 stat.do-final           = true
 
@@ -38,7 +39,7 @@ pop.subpop.0.species.pipe.source.0.num-sources = 2
 pop.subpop.0.species.pipe.source.1             = ec.graph.GraphMutationPipeline
 pop.subpop.0.species.pipe.source.1.prob        = 0.1
 pop.subpop.0.species.pipe.source.1.num-sources = 1
-pop.subpop.0.species.pipe.source.2             = ec.breed.ReproductionPipeline
+pop.subpop.0.species.pipe.source.2             = ec.graph.GraphReproductionPipeline
 pop.subpop.0.species.pipe.source.2.prob        = 0.1
 pop.subpop.0.species.pipe.source.2.num-sources = 1
 pop.subpop.0.species.pipe.source.0.source.0	   = ec.select.TournamentSelection

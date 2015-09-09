@@ -3,10 +3,8 @@ package ec.graph;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 
 import ec.BreedingPipeline;
@@ -91,6 +89,7 @@ public class LocalMutationPipeline extends BreedingPipeline {
 
             // Remove any dangling nodes
             init.removeDanglingNodes( graph );
+            init.countGraphElements( graph );
         }
 
         return n;

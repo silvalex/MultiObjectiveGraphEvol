@@ -61,8 +61,11 @@ public class GraphInitializer extends SimpleInitializer {
 	public int idealPathLength;
 	public int idealNumAtomic;
 	public int numNodesMutation;
+	public static File histogramLogFile;
 
-//	public Stopwatch watch = new Stopwatch();
+	// Statistics tracking
+    public static Map<String, Integer> nodeCount = new HashMap<String, Integer>();
+    public static Map<String, Integer> edgeCount = new HashMap<String, Integer>();
 
 	@Override
 	public void setup(EvolutionState state, Parameter base) {
@@ -81,6 +84,7 @@ public class GraphInitializer extends SimpleInitializer {
 		Parameter runningOwlsParam = new Parameter("running-owls");
 		Parameter findConceptsParam = new Parameter("find-concepts");
 		Parameter numNodesMutationParam = new Parameter("num-nodes-mutation");
+		Parameter histogramLogNameParam = new Parameter("stat.histogram");
 
 		w1 = state.parameters.getDouble(weight1Param, null);
 		w2 = state.parameters.getDouble(weight2Param, null);
@@ -93,6 +97,7 @@ public class GraphInitializer extends SimpleInitializer {
 		idealNumAtomic = state.parameters.getInt(idealNumAtomicParam, null);
 		findConcepts = state.parameters.getBoolean( findConceptsParam, null, false );
 		numNodesMutation = state.parameters.getInt( numNodesMutationParam, null );
+		histogramLogFile = state.parameters.getFile( histogramLogNameParam, null );
 
 		parseWSCServiceFile(state.parameters.getString(servicesParam, null));
 		parseWSCTaskFile(state.parameters.getString(taskParam, null));
@@ -155,10 +160,6 @@ public class GraphInitializer extends SimpleInitializer {
 		for (Node s: serviceMap.values()) {
 			addServiceToTaxonomyTree(s);
 		}
-
-		// Add input and output nodes
-		//addServiceToTaxonomyTree(startNode);
-		//addEndNodeToTaxonomyTree();
 	}
 
 	private void addServiceToTaxonomyTree(Node s) {
@@ -166,15 +167,10 @@ public class GraphInitializer extends SimpleInitializer {
 	    Set<TaxonomyNode> seenConceptsOutput = new HashSet<TaxonomyNode>();
 		for (String outputVal : s.getOutputs()) {
 			TaxonomyNode n = taxonomyMap.get(outputVal);
-//			n.servicesWithOutput.add(s);
 			s.getTaxonomyOutputs().add(n);
 
 			// Also add output to all parent nodes
 			Queue<TaxonomyNode> queue = new LinkedList<TaxonomyNode>();
-//			for (TaxonomyNode parent : n.parents) {
-//			    if (!seenConceptsOutput.contains( parent ))
-//			        queue.add( parent );
-//			}
 			queue.add( n );
 
 			while (!queue.isEmpty()) {
@@ -197,10 +193,6 @@ public class GraphInitializer extends SimpleInitializer {
 
 			// Also add input to all children nodes
 			Queue<TaxonomyNode> queue = new LinkedList<TaxonomyNode>();
-//			for (TaxonomyNode child: n.children) {
-//			    if (!seenConceptsInput.contains( child ))
-//			        queue.add(child);
-//			}
 			queue.add( n );
 
 			while(!queue.isEmpty()) {
@@ -548,21 +540,37 @@ public class GraphInitializer extends SimpleInitializer {
 				if (!(ch instanceof Text)) {
 					Element currNode = (Element) nodes.item(i);
 					String value = currNode.getAttribute("name");
-    					TaxonomyNode taxNode = taxonomyMap.get( value );
-    					if (taxNode == null) {
-    					    taxNode = new TaxonomyNode(value);
-    					    taxonomyMap.put( value, taxNode );
-    					}
-    					if (parent != null) {
-    					    taxNode.parents.add(parent);
-    						parent.children.add(taxNode);
-    					}
-
-    					NodeList children = currNode.getChildNodes();
-    					processTaxonomyChildren(taxNode, children);
+					TaxonomyNode taxNode = taxonomyMap.get( value );
+					if (taxNode == null) {
+					    taxNode = new TaxonomyNode(value);
+					    taxonomyMap.put( value, taxNode );
 					}
+					if (parent != null) {
+					    taxNode.parents.add(parent);
+						parent.children.add(taxNode);
+					}
+
+					NodeList children = currNode.getChildNodes();
+					processTaxonomyChildren(taxNode, children);
 				}
+			}
 		}
 	}
-
+	
+	public void countGraphElements(GraphIndividual graph) {
+        // Keep track of nodes and edges for statistics
+        for (String nodeName : graph.nodeMap.keySet())
+            addToCountMap(nodeCount, nodeName);
+        for (Edge edge : graph.edgeList)
+            addToCountMap(edgeCount, edge.toString());
+	}
+	
+   private void addToCountMap(Map<String,Integer> map, String item) {
+        if (map.containsKey( item )) {
+            map.put( item, map.get( item ) + 1 );
+        }
+        else {
+            map.put( item, 1 );
+        }
+    }
 }

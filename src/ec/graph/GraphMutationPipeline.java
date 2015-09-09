@@ -126,6 +126,7 @@ public class GraphMutationPipeline extends BreedingPipeline {
 
             }
             graph.evaluated=false;
+            init.countGraphElements( graph );
         }
         return n;
 	}

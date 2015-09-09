@@ -1,14 +1,47 @@
 package ec.graph;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import ec.EvolutionState;
 import ec.Individual;
 import ec.simple.SimpleShortStatistics;
+import ec.util.Parameter;
 
 /**
  *
  * @author Alex
  */
 public class GraphStatistics extends SimpleShortStatistics {
+    public int histogramLog = 0; // 0 by default means stdout
+    
+//    @Override
+//    public void setup( final EvolutionState state, final Parameter base ) {
+//        super.setup( state, base );
+//        File histogramFile = GraphInitializer.histogramLogFile;
+//        if ( histogramFile != null ) try {
+//            histogramLog = state.output.addLog( histogramFile, true, false, false );
+//        }
+//        catch ( IOException i ) {
+//            state.output.fatal( "An IOException occurred trying to create the log " + histogramFile + ":\n" + i );
+//        }
+//        // else we’ll just keep the log at 0, which is stdout
+//    }
+    
+    public void createHistogramLog( final EvolutionState state ) {
+        File histogramFile = GraphInitializer.histogramLogFile;
+        if ( histogramFile != null ) try {
+            histogramLog = state.output.addLog( histogramFile, true, false, false );
+        }
+        catch ( IOException i ) {
+            state.output.fatal( "An IOException occurred trying to create the log " + histogramFile + ":\n" + i );
+        }
+        // else we’ll just keep the log at 0, which is stdout
+    }
+    
     @Override
     public void postEvaluationStatistics(EvolutionState state){
         boolean output = (state.generation % modulus == 0);
@@ -153,8 +186,39 @@ public class GraphStatistics extends SimpleShortStatistics {
 
         // we're done!
         if (output) state.output.println("", statisticslog);
-
+        
+        // Now let's write the histogram log
+        if (output) {
+            // Print the best candidate at the end of the run
+            if (state.generation == state.parameters.getInt(new Parameter("generations"), null)-1) {
+                state.output.println(popBestSoFar.toString(), statisticslog);
+                
+                createHistogramLog(state);
+            
+                // Write node histogram
+                List<String> keyList = new ArrayList<String>(GraphInitializer.nodeCount.keySet());
+                Collections.sort( keyList );
+                
+                for (String key : keyList)
+                    state.output.print( key + " ", histogramLog );
+                state.output.println( "", histogramLog );
+                
+                for (String key : keyList)
+                    state.output.print( String.format("%d ", GraphInitializer.nodeCount.get( key )), histogramLog );
+                state.output.println( "", histogramLog );  
+                
+                // Write edge histogram
+                List<String> edgeList = new ArrayList<String>(GraphInitializer.edgeCount.keySet());
+                Collections.sort( edgeList );
+                    
+                for (String key : edgeList)
+                    state.output.print( key + " ", histogramLog );
+                state.output.println( "", histogramLog );
+                
+                for (String key : edgeList)
+                    state.output.print( String.format("%d ", GraphInitializer.edgeCount.get( key )) , histogramLog);
+                state.output.println( "", histogramLog );
+            }
+        }
     }
-
-
 }

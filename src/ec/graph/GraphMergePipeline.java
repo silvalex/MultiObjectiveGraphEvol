@@ -72,6 +72,7 @@ public class GraphMergePipeline extends BreedingPipeline {
         		}
 
 	        	inds[q].evaluated=false;
+	        	init.countGraphElements( (GraphIndividual) inds[q] );
         }
         return n1;
 	}
