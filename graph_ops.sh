@@ -29,6 +29,7 @@ DIR_OUTPUT=$DIR_GRID$2 # Match this argument with dataset name
 
 FILE_JOB_LIST="CURRENT_JOBS.txt"
 FILE_RESULT_PREFIX="out"
+FILE_HISTOGRAM_PREFIX="hist"
 
    
 mkdir -p $DIR_TMP
@@ -62,9 +63,11 @@ echo "Running: "
 
 seed=$SGE_TASK_ID
 result=$FILE_RESULT_PREFIX$seed.stat
+hist_result=$FILE_HISTOGRAM_PREFIX$seed.stat
 
-java -cp ecj.23.jar:./bin:. ec.Evolve -file $3 -p seed.0=$seed -p stat.file=\$$result
+java -cp ecj.23.jar:./bin:. ec.Evolve -file $3 -p seed.0=$seed -p stat.file=\$$result -p stat.histogram=\$$hist_result
 cp $result ./results
+cp $hist_result ./results
 
 # Now we move the output to a place to pick it up from later and clean up
 cd results
