@@ -67,3 +67,4 @@ find-concepts        = true
 ideal-path-length    = 0
 ideal-num-atomic     = 0
 num-nodes-mutation   = 2
+dynamic-normalisation = true

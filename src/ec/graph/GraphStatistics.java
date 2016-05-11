@@ -176,8 +176,27 @@ public class GraphStatistics extends SimpleShortStatistics {
             state.output.print("" + popMeanFitness + " " , statisticslog);                                                                                  // mean fitness of pop this gen
             state.output.print("" + (popBestOfGeneration.fitness.fitness()) + " " , statisticslog);                 // best fitness of pop this gen
             state.output.print("" + (popBestSoFar.fitness.fitness()) + " " , statisticslog);                // best fitness of pop so far
-            state.output.print("" + numNodes + " ", statisticslog);
-            state.output.print("" + path + " ", statisticslog);
+            //state.output.print("" + numNodes + " ", statisticslog);
+            //state.output.print("" + path + " ", statisticslog);
+            
+            GraphInitializer.availIdx = 0;
+            GraphInitializer.reliaIdx = 0;
+            GraphInitializer.timeIdx = 0;
+            GraphInitializer.costIdx = 0;
+            state.output.print(GraphInitializer.meanAvailPerGen[GraphInitializer.availIdx++] + " ", statisticslog);
+            state.output.print(GraphInitializer.meanReliaPerGen[GraphInitializer.reliaIdx++] + " ", statisticslog);
+            state.output.print(GraphInitializer.meanTimePerGen[GraphInitializer.timeIdx++] + " ", statisticslog);
+            state.output.print(GraphInitializer.meanCostPerGen[GraphInitializer.costIdx++] + " ", statisticslog);
+
+            state.output.print("" + ((GraphIndividual)popBestOfGeneration).availability + " ", statisticslog);
+            state.output.print("" + ((GraphIndividual)popBestOfGeneration).reliability + " ", statisticslog);
+            state.output.print("" + ((GraphIndividual)popBestOfGeneration).time + " ", statisticslog);
+            state.output.print("" + ((GraphIndividual)popBestOfGeneration).cost + " ", statisticslog);
+
+            state.output.print("" + ((GraphIndividual)popBestSoFar).availability + " ", statisticslog);
+            state.output.print("" + ((GraphIndividual)popBestSoFar).reliability + " ", statisticslog);
+            state.output.print("" + ((GraphIndividual)popBestSoFar).time + " ", statisticslog);
+            state.output.print("" + ((GraphIndividual)popBestSoFar).cost + " ", statisticslog);
 
             }
 

@@ -11,7 +11,7 @@ import ec.simple.SimpleFitness;
 import ec.util.Parameter;
 
 public class GraphIndividual extends Individual {
-
+	private static final long serialVersionUID = 1L;
 	public Map<String, Node> nodeMap = new HashMap<String, Node>();
 	public Map<String, Node> considerableNodeMap= new HashMap<String, Node>();
 	public List<Edge> edgeList = new ArrayList<Edge>();
