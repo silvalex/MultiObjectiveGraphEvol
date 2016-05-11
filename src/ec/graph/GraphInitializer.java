@@ -42,9 +42,9 @@ public class GraphInitializer extends SimpleInitializer {
 	public Node endNode;
 	public GraphRandom random;
 
-	public final double minAvailability = 0.0;
+	public double minAvailability = 0.0;
 	public double maxAvailability = -1.0;
-	public final double minReliability = 0.0;
+	public double minReliability = 0.0;
 	public double maxReliability = -1.0;
 	public double minTime = Double.MAX_VALUE;
 	public double maxTime = -1.0;
@@ -54,6 +54,17 @@ public class GraphInitializer extends SimpleInitializer {
 	public double w2;
 	public double w3;
 	public double w4;
+	public static boolean dynamicNormalisation;
+	
+	public static double[] meanAvailPerGen;
+	public static double[] meanReliaPerGen;
+	public static double[] meanTimePerGen;
+	public static double[] meanCostPerGen;
+	public static int availIdx = 0;
+	public static int reliaIdx = 0;
+	public static int timeIdx = 0;
+	public static int costIdx = 0;
+	
 	public boolean overlapEnabled;
 	public boolean runningOwls;
 	public boolean findConcepts;
@@ -85,11 +96,13 @@ public class GraphInitializer extends SimpleInitializer {
 		Parameter findConceptsParam = new Parameter("find-concepts");
 		Parameter numNodesMutationParam = new Parameter("num-nodes-mutation");
 		Parameter histogramLogNameParam = new Parameter("stat.histogram");
+		Parameter dynamicNormalisationParam = new Parameter("dynamic-normalisation");
 
 		w1 = state.parameters.getDouble(weight1Param, null);
 		w2 = state.parameters.getDouble(weight2Param, null);
 		w3 = state.parameters.getDouble(weight3Param, null);
 		w4 = state.parameters.getDouble(weight4Param, null);
+		dynamicNormalisation = state.parameters.getBoolean(dynamicNormalisationParam, null, false);
 	    overlapEnabled = state.parameters.getBoolean( overlapEnabledParam, null, false );
 	    runningOwls = state.parameters.getBoolean( runningOwlsParam, null, false );
 	    overlapPercentage = state.parameters.getDouble( overlapPercentageParam, null );
@@ -98,6 +111,12 @@ public class GraphInitializer extends SimpleInitializer {
 		findConcepts = state.parameters.getBoolean( findConceptsParam, null, false );
 		numNodesMutation = state.parameters.getInt( numNodesMutationParam, null );
 		histogramLogFile = state.parameters.getFile( histogramLogNameParam, null );
+		
+		int numGens = state.parameters.getInt(new Parameter("generations"), null);
+		meanAvailPerGen = new double[numGens];
+		meanReliaPerGen = new double[numGens];
+		meanTimePerGen = new double[numGens];
+		meanCostPerGen = new double[numGens];
 
 		parseWSCServiceFile(state.parameters.getString(servicesParam, null));
 		parseWSCTaskFile(state.parameters.getString(taskParam, null));
@@ -119,7 +138,7 @@ public class GraphInitializer extends SimpleInitializer {
 
 		populateTaxonomyTree();
 		relevant = getRelevantServices(serviceMap, taskInput, taskOutput);
-		if(!runningOwls)
+		if(!runningOwls && !dynamicNormalisation)
 		    calculateNormalisationBounds(relevant);
 	}
 
