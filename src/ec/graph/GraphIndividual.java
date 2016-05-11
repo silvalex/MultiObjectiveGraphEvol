@@ -19,6 +19,10 @@ public class GraphIndividual extends Individual {
 	public Set<Node> unused;
 	public int longestPathLength;
 	public int numAtomicServices;
+	public double availability;
+	public double reliability;
+	public double time;
+	public double cost;
 
 	public GraphIndividual(){
 		super();
@@ -69,7 +73,7 @@ public class GraphIndividual extends Individual {
 
 	/**
 	 * Copies this graph structure to another GraphIndividual object.
-	 * 
+	 *
 	 * @param other
 	 */
     public void copyTo(GraphIndividual other) {
@@ -78,7 +82,7 @@ public class GraphIndividual extends Individual {
             other.nodeMap.put( newN.getName(), newN );
             other.considerableNodeMap.put( newN.getName(), newN );
         }
-        
+
         for (Edge e: edgeList) {
             Edge newE = new Edge(e.getIntersect());
             other.edgeList.add(newE);

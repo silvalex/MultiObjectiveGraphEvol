@@ -1,6 +1,6 @@
 breedthreads = 1
 evalthreads  = 1
-seed.0       = 10
+seed.0       = 1
 
 state        = ec.simple.SimpleEvolutionState
 pop		     = ec.Population
@@ -50,9 +50,9 @@ breed.elite.0                                  = 0
 select.tournament.size                         = 2
 
 eval.problem         = ec.graph.GraphEvol
-#composition-task     = owlsTCTask4.xml
-#composition-taxonomy = owlsTCTaxonomy.xml
-#composition-services = owlsTCServices.xml
+#composition-task     = test_problem.xml
+#composition-taxonomy = test_taxonomy.xml
+#composition-services = test_serv.xml
 composition-task     = problem.xml
 composition-taxonomy = taxonomy.xml
 composition-services = services-output.xml

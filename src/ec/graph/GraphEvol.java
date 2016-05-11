@@ -35,7 +35,7 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
         double t = 0.0;
         double c = 0.0;
 
-        for (Node n : ind2.considerableNodeMap.values()) {
+        for (Node n : ind2.nodeMap.values()) {
         	double[] qos = n.getQos();
         	a *= qos[GraphInitializer.AVAILABILITY];
         	r *= qos[GraphInitializer.RELIABILITY];
@@ -44,6 +44,12 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
 
         // Calculate longest time
         t = findLongestPath(ind2);
+
+        // Keep track of individual quality attributes before normalisation
+        ind2.availability = a;
+        ind2.reliability = r;
+        ind2.time = t;
+        ind2.cost = c;
 
         a = normaliseAvailability(a, init);
         r = normaliseReliability(r, init);

@@ -118,7 +118,8 @@ public class GraphInitializer extends SimpleInitializer {
 		endNode = new Node("end", mockQos, taskOutput ,new HashSet<String>());
 
 		populateTaxonomyTree();
-		relevant = getRelevantServices(serviceMap, taskInput, taskOutput);
+		//relevant = getRelevantServices(serviceMap, taskInput, taskOutput); //XXX
+		relevant = new HashSet<Node>(serviceMap.values());
 		if(!runningOwls)
 		    calculateNormalisationBounds(relevant);
 	}
@@ -556,7 +557,7 @@ public class GraphInitializer extends SimpleInitializer {
 			}
 		}
 	}
-	
+
 	public void countGraphElements(GraphIndividual graph) {
         // Keep track of nodes and edges for statistics
         for (String nodeName : graph.nodeMap.keySet())
@@ -564,7 +565,7 @@ public class GraphInitializer extends SimpleInitializer {
         for (Edge edge : graph.edgeList)
             addToCountMap(edgeCount, edge.toString());
 	}
-	
+
    private void addToCountMap(Map<String,Integer> map, String item) {
         if (map.containsKey( item )) {
             map.put( item, map.get( item ) + 1 );

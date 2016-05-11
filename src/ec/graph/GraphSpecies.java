@@ -251,7 +251,6 @@ public class GraphSpecies extends Species {
             for(String output : start.getOutputs()) {
                 Set<String> inputVals = init.taxonomyMap.get(output).servicesWithInput.get(n);
                 if (inputVals != null) {
-                    //candidateInputs.removeAll(inputVals);
                     startIntersect.addAll(inputVals);
                 }
             }
