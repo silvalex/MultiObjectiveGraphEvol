@@ -6,7 +6,7 @@ import ec.EvolutionState;
 import ec.Individual;
 import ec.Problem;
 import ec.Subpopulation;
-import ec.simple.SimpleFitness;
+import ec.multiobjective.nsga2.NSGA2MultiObjectiveFitness;
 import ec.simple.SimpleProblemForm;
 
 public class GraphEvol extends Problem implements SimpleProblemForm {
@@ -15,14 +15,9 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
 	@Override
 	public void evaluate(final EvolutionState state, final Individual ind, final int subpopulation, final int threadnum) {
 	    GraphInitializer init = (GraphInitializer) state.initializer;
-	    if (init.runningOwls) {
-	        evaluateOwls(init, state, ind, subpopulation, threadnum);
-	    }
-	    else {
-	        calculateQoS(init, state, ind, subpopulation, threadnum);
-	        if (!GraphInitializer.dynamicNormalisation)
-	        	calculateFitness((GraphIndividual)ind, init, state);
-	    }
+	    calculateQoS(init, state, ind, subpopulation, threadnum);
+	    if (!GraphInitializer.dynamicNormalisation)
+	    	calculateFitness((GraphIndividual)ind, init, state);
 	}
 
     public void calculateQoS(final GraphInitializer init, final EvolutionState state, final Individual ind, final int subpopulation, final int threadnum) {
@@ -51,50 +46,22 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
         ind2.time = t;
         ind2.cost = c;
 	}
-    
+
     public void calculateFitness(GraphIndividual ind, GraphInitializer init, EvolutionState state) {
     	double a = normaliseAvailability(ind.availability, init);
         double r = normaliseReliability(ind.reliability, init);
         double t = normaliseTime(ind.time, init);
         double c = normaliseCost(ind.cost, init);
-        
-        double fitness = init.w1 * a + init.w2 * r + init.w3 * t + init.w4 * c;
 
-        ((SimpleFitness)ind.fitness).setFitness(state,
-                // ...the fitness...
-                fitness,
-                ///... is the individual ideal?  Indicate here...
-                false);
+        double[] objectives = new double[4];
+        objectives[GraphInitializer.AVAILABILITY] = a;
+        objectives[GraphInitializer.RELIABILITY] = r;
+        objectives[GraphInitializer.TIME] = t;
+        objectives[GraphInitializer.COST] = c;
 
+        ((NSGA2MultiObjectiveFitness)ind.fitness).setObjectives(state, objectives);
         ind.evaluated = true;
     }
-
-    public void evaluateOwls(final GraphInitializer init, final EvolutionState state, final Individual ind, final int subpopulation, final int threadnum) {
-
-		if (ind.evaluated) return;   //don't evaluate the individual if it's already evaluated
-        if (!(ind instanceof GraphIndividual))
-            state.output.fatal("Whoa!  It's not a GraphIndividual!!!",null);
-        GraphIndividual ind2 = (GraphIndividual)ind;
-
-        // Calculate longest time
-        int runPath = findLongestPath2(ind2) - 1;
-        ind2.longestPathLength = runPath;
-        ind2.numAtomicServices = (ind2.considerableNodeMap.size() - 2);
-        boolean isIdeal = runPath == init.idealPathLength && ind2.numAtomicServices == init.idealNumAtomic;
-
-        double fitness = 0.5 * (1.0 / runPath) + 0.5 * (1.0/ ind2.numAtomicServices);
-        //double fitness = (100 - runPath) + (100 - ind2.numAtomicServices);
-
-        ((SimpleFitness)ind2.fitness).setFitness(state,
-                // ...the fitness...
-                fitness,
-                ///... is the individual ideal?  Indicate here...
-                isIdeal);
-
-        ind2.evaluated = true;
-	}
-
-
 
 	private double normaliseAvailability(double availability, GraphInitializer init) {
 		if (init.maxAvailability - init.minAvailability == 0.0)
@@ -208,7 +175,7 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
 
 		return totalTime;
 	}
-	
+
 	@Override
 	public void finishEvaluating(EvolutionState state, int threadnum) {
 		GraphInitializer init = (GraphInitializer) state.initializer;

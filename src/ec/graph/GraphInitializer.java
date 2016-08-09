@@ -23,6 +23,8 @@ import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
 
 import ec.EvolutionState;
+import ec.Population;
+import ec.Subpopulation;
 import ec.simple.SimpleInitializer;
 import ec.util.Parameter;
 
@@ -50,12 +52,8 @@ public class GraphInitializer extends SimpleInitializer {
 	public double maxTime = -1.0;
 	public double minCost = Double.MAX_VALUE;
 	public double maxCost = -1.0;
-	public double w1;
-	public double w2;
-	public double w3;
-	public double w4;
 	public static boolean dynamicNormalisation;
-	
+
 	public static double[] meanAvailPerGen;
 	public static double[] meanReliaPerGen;
 	public static double[] meanTimePerGen;
@@ -64,9 +62,8 @@ public class GraphInitializer extends SimpleInitializer {
 	public static int reliaIdx = 0;
 	public static int timeIdx = 0;
 	public static int costIdx = 0;
-	
+
 	public boolean overlapEnabled;
-	public boolean runningOwls;
 	public boolean findConcepts;
 	public double overlapPercentage;
 	public int idealPathLength;
@@ -80,38 +77,33 @@ public class GraphInitializer extends SimpleInitializer {
 
 	@Override
 	public void setup(EvolutionState state, Parameter base) {
+		super.setup(state, base);
+
+		state.population = new Population();
+		state.population.subpops = new Subpopulation[0];
+
 //	    watch.start();
 		Parameter servicesParam = new Parameter("composition-services");
 		Parameter taskParam = new Parameter("composition-task");
 		Parameter taxonomyParam = new Parameter("composition-taxonomy");
-		Parameter weight1Param = new Parameter("fitness-weight1");
-		Parameter weight2Param = new Parameter("fitness-weight2");
-		Parameter weight3Param = new Parameter("fitness-weight3");
-		Parameter weight4Param = new Parameter("fitness-weight4");
 		Parameter overlapEnabledParam = new Parameter("overlap-enabled");
 		Parameter overlapPercentageParam = new Parameter("overlap-percentage");
 		Parameter idealPathLengthParam = new Parameter("ideal-path-length");
 		Parameter idealNumAtomicParam = new Parameter("ideal-num-atomic");
-		Parameter runningOwlsParam = new Parameter("running-owls");
 		Parameter findConceptsParam = new Parameter("find-concepts");
 		Parameter numNodesMutationParam = new Parameter("num-nodes-mutation");
 		Parameter histogramLogNameParam = new Parameter("stat.histogram");
 		Parameter dynamicNormalisationParam = new Parameter("dynamic-normalisation");
 
-		w1 = state.parameters.getDouble(weight1Param, null);
-		w2 = state.parameters.getDouble(weight2Param, null);
-		w3 = state.parameters.getDouble(weight3Param, null);
-		w4 = state.parameters.getDouble(weight4Param, null);
 		dynamicNormalisation = state.parameters.getBoolean(dynamicNormalisationParam, null, false);
 	    overlapEnabled = state.parameters.getBoolean( overlapEnabledParam, null, false );
-	    runningOwls = state.parameters.getBoolean( runningOwlsParam, null, false );
 	    overlapPercentage = state.parameters.getDouble( overlapPercentageParam, null );
 		idealPathLength = state.parameters.getInt(idealPathLengthParam, null);
 		idealNumAtomic = state.parameters.getInt(idealNumAtomicParam, null);
 		findConcepts = state.parameters.getBoolean( findConceptsParam, null, false );
 		numNodesMutation = state.parameters.getInt( numNodesMutationParam, null );
 		histogramLogFile = state.parameters.getFile( histogramLogNameParam, null );
-		
+
 		int numGens = state.parameters.getInt(new Parameter("generations"), null);
 		meanAvailPerGen = new double[numGens];
 		meanReliaPerGen = new double[numGens];
@@ -139,7 +131,7 @@ public class GraphInitializer extends SimpleInitializer {
 		populateTaxonomyTree();
 
 		relevant = getRelevantServices(serviceMap, taskInput, taskOutput);
-		if(!runningOwls && !dynamicNormalisation)
+		if(!dynamicNormalisation)
 		    calculateNormalisationBounds(relevant);
 	}
 
@@ -430,12 +422,12 @@ public class GraphInitializer extends SimpleInitializer {
         		Element eElement = (Element) nNode;
 
         		String name = eElement.getAttribute("name");
-        		if (!runningOwls) {
-        		    qos[TIME] = Double.valueOf(eElement.getAttribute("Res"));
-        		    qos[COST] = Double.valueOf(eElement.getAttribute("Pri"));
-        		    qos[AVAILABILITY] = Double.valueOf(eElement.getAttribute("Ava"));
-        		    qos[RELIABILITY] = Double.valueOf(eElement.getAttribute("Rel"));
-        		}
+
+    		    qos[TIME] = Double.valueOf(eElement.getAttribute("Res"));
+    		    qos[COST] = Double.valueOf(eElement.getAttribute("Pri"));
+    		    qos[AVAILABILITY] = Double.valueOf(eElement.getAttribute("Ava"));
+    		    qos[RELIABILITY] = Double.valueOf(eElement.getAttribute("Rel"));
+
 
 				// Get inputs
 				org.w3c.dom.Node inputNode = eElement.getElementsByTagName("inputs").item(0);

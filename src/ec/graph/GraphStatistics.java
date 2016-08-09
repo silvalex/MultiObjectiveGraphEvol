@@ -178,7 +178,7 @@ public class GraphStatistics extends SimpleShortStatistics {
             state.output.print("" + (popBestSoFar.fitness.fitness()) + " " , statisticslog);                // best fitness of pop so far
             //state.output.print("" + numNodes + " ", statisticslog);
             //state.output.print("" + path + " ", statisticslog);
-            
+
             GraphInitializer.availIdx = 0;
             GraphInitializer.reliaIdx = 0;
             GraphInitializer.timeIdx = 0;
@@ -213,7 +213,7 @@ public class GraphStatistics extends SimpleShortStatistics {
                 state.output.println(popBestSoFar.toString(), statisticslog);
                 // Print individual quality attributes
                 GraphIndividual graphInd = (GraphIndividual) popBestSoFar;
-                state.output.println(String.format("A: %.20f, R: %.20f, T: %f, C: %f", graphInd.availability, graphInd.reliability, graphInd.time, graphInd.cost), statisticslog);
+                //state.output.println(String.format("A: %.20f, R: %.20f, T: %f, C: %f", graphInd.availability, graphInd.reliability, graphInd.time, graphInd.cost), statisticslog);
 
 
                 createHistogramLog(state);

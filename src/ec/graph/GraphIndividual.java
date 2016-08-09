@@ -7,7 +7,8 @@ import java.util.Map;
 import java.util.Set;
 
 import ec.Individual;
-import ec.simple.SimpleFitness;
+//import ec.multiobjective.nsga2.NSGA2MultiObjectiveFitness;
+import ec.Fitness;
 import ec.util.Parameter;
 
 public class GraphIndividual extends Individual {
@@ -24,16 +25,16 @@ public class GraphIndividual extends Individual {
 	public double time;
 	public double cost;
 
-	public GraphIndividual(){
-		super();
-		super.fitness = new SimpleFitness();
-		super.species = new GraphSpecies();
-	}
-
+//	public GraphIndividual(){
+//		super();
+//		super.species = new GraphSpecies();
+////		super.fitness = (Fitness) super.species.f_prototype.clone(); XXX
+//	}
+//
 	public GraphIndividual(Set<Node> unused) {
 		super();
-		super.fitness = new SimpleFitness();
-		super.species = new GraphSpecies();
+		//super.species = new GraphSpecies();
+		//super.fitness = (Fitness) super.species.f_prototype.clone(); XXX
 		this.unused = unused;
 	}
 
