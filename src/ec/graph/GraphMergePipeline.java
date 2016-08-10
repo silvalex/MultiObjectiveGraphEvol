@@ -62,7 +62,7 @@ public class GraphMergePipeline extends BreedingPipeline {
         		if (!init.overlapEnabled || enoughOverlap(g1, g2, init.overlapPercentage)) {
         		    GraphIndividual newG = mergeGraphs(g1, g2, init);
         		    GraphSpecies species = (GraphSpecies) newG.species;
-        		    inds[q] = species.createNewGraph(newG, state, init.startNode.clone(), init.endNode.clone(), init.relevant);
+        		    inds[q] = species.createNewGraph(newG, state, init.startNode.clone(), init.endNode.clone(), init.relevant, thread);
         		}
         		else {
         		    if (g1.fitness.fitness() > g2.fitness.fitness())
@@ -83,11 +83,9 @@ public class GraphMergePipeline extends BreedingPipeline {
 		// Merge nodes
 		for (Node n: g1.nodeMap.values()) {
 			newG.nodeMap.put(n.getName(), n.clone());
-			newG.considerableNodeMap.put(n.getName(), n.clone());
 		}
 		for (Node n: g2.nodeMap.values()) {
 			newG.nodeMap.put(n.getName(), n.clone());
-			newG.considerableNodeMap.put(n.getName(), n.clone());
 		}
 
 		// Merge edges
@@ -106,7 +104,12 @@ public class GraphMergePipeline extends BreedingPipeline {
 			toNode.getIncomingEdgeList().add(newE);
 		}
 		init.removeDanglingNodes(newG);
-		return newG;
+		g1.nodeMap.clear();
+		g1.nodeMap.putAll(newG.nodeMap);
+		g1.edgeList.clear();
+		g1.edgeList.addAll(newG.edgeList);
+		
+		return g1;
 	}
 
 	private boolean enoughOverlap(GraphIndividual i1, GraphIndividual i2, double overlapPercentage) {

@@ -103,7 +103,7 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
 		Map<String, Node> predecessor = new HashMap<String, Node>();
 
 		// Step 1: initialize graph
-		for (Node node : g.considerableNodeMap.values()) {
+		for (Node node : g.nodeMap.values()) {
 			if (node.getName().equals("start"))
 				distance.put(node.getName(), 0.0);
 			else
@@ -111,8 +111,8 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
 		}
 
 		// Step 2: relax edges repeatedly
-		for (int i = 1; i < g.considerableNodeMap.size(); i++) {
-			for (Edge e : g.considerableEdgeList) {
+		for (int i = 1; i < g.nodeMap.size(); i++) {
+			for (Edge e : g.edgeList) {
 				if ((distance.get(e.getFromNode().getName()) -
 				        e.getToNode().getQos()[GraphInitializer.TIME])
 				        < distance.get(e.getToNode().getName())) {
@@ -146,7 +146,7 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
 		Map<String, Node> predecessor = new HashMap<String, Node>();
 
 		// Step 1: initialize graph
-		for (Node node : g.considerableNodeMap.values()) {
+		for (Node node : g.nodeMap.values()) {
 			if (node.getName().equals("start"))
 				distance.put(node.getName(), 0);
 			else
@@ -154,8 +154,8 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
 		}
 
 		// Step 2: relax edges repeatedly
-		for (int i = 1; i < g.considerableNodeMap.size(); i++) {
-			for (Edge e : g.considerableEdgeList) {
+		for (int i = 1; i < g.nodeMap.size(); i++) {
+			for (Edge e : g.edgeList) {
 				if ((distance.get(e.getFromNode().getName()) - 1)
 				        < distance.get(e.getToNode().getName())) {
 					distance.put(e.getToNode().getName(), (distance.get(e.getFromNode().getName()) - 1));

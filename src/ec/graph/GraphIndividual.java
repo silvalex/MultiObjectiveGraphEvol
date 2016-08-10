@@ -14,29 +14,13 @@ import ec.util.Parameter;
 public class GraphIndividual extends Individual {
 	private static final long serialVersionUID = 1L;
 	public Map<String, Node> nodeMap = new HashMap<String, Node>();
-	public Map<String, Node> considerableNodeMap= new HashMap<String, Node>();
 	public List<Edge> edgeList = new ArrayList<Edge>();
-	public List<Edge> considerableEdgeList = new ArrayList<Edge>();
-	public Set<Node> unused;
 	public int longestPathLength;
 	public int numAtomicServices;
 	public double availability;
 	public double reliability;
 	public double time;
 	public double cost;
-
-//	public GraphIndividual(){
-//		super();
-//		super.species = new GraphSpecies();
-////		super.fitness = (Fitness) super.species.f_prototype.clone(); XXX
-//	}
-//
-	public GraphIndividual(Set<Node> unused) {
-		super();
-		//super.species = new GraphSpecies();
-		//super.fitness = (Fitness) super.species.f_prototype.clone(); XXX
-		this.unused = unused;
-	}
 
 	@Override
 	public Parameter defaultBase() {
@@ -81,13 +65,11 @@ public class GraphIndividual extends Individual {
         for (Node n : nodeMap.values()) {
             Node newN = n.clone();
             other.nodeMap.put( newN.getName(), newN );
-            other.considerableNodeMap.put( newN.getName(), newN );
         }
 
         for (Edge e: edgeList) {
             Edge newE = new Edge(e.getIntersect());
             other.edgeList.add(newE);
-            other.considerableEdgeList.add( newE );
             Node newFromNode = other.nodeMap.get( e.getFromNode().getName() );
             newE.setFromNode( newFromNode );
             newFromNode.getOutgoingEdgeList().add( newE );
@@ -95,5 +77,14 @@ public class GraphIndividual extends Individual {
             newE.setToNode( newToNode );
             newToNode.getIncomingEdgeList().add( newE );
         }
+    }
+    
+    @Override
+    public GraphIndividual clone() {
+    	GraphIndividual g = new GraphIndividual();
+    	g.species = this.species;
+    	g.fitness = (Fitness) g.species.f_prototype.clone();
+    	copyTo(g);
+    	return g;
     }
 }

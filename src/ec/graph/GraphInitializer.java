@@ -288,8 +288,9 @@ public class GraphInitializer extends SimpleInitializer {
 	public void removeDanglingNodes(GraphIndividual graph) {
 	    List<Node> dangling = new ArrayList<Node>();
 	    for (Node g : graph.nodeMap.values()) {
-	        if (!g.getName().equals("end") && g.getOutgoingEdgeList().isEmpty())
+	        if (!g.getName().equals("end") && g.getOutgoingEdgeList().isEmpty()) {
 	            dangling.add( g );
+	        }
 	    }
 
 	    for (Node d: dangling) {
@@ -300,11 +301,9 @@ public class GraphInitializer extends SimpleInitializer {
 	private void removeDangling(Node n, GraphIndividual graph) {
 	    if (n.getOutgoingEdgeList().isEmpty()) {
 	        graph.nodeMap.remove( n.getName() );
-	        graph.considerableNodeMap.remove( n.getName() );
 	        for (Edge e : n.getIncomingEdgeList()) {
 	            e.getFromNode().getOutgoingEdgeList().remove( e );
 	            graph.edgeList.remove( e );
-	            graph.considerableEdgeList.remove( e );
 	            removeDangling(e.getFromNode(), graph);
 	        }
 	    }

@@ -47,9 +47,14 @@ pop.subpop.0.species.pipe.source.1.source.0	   = ec.select.TournamentSelection
 pop.subpop.0.species.pipe.source.2.source.0	   = ec.select.TournamentSelection
 select.tournament.size                         = 2
 
-composition-task     = problem.xml
-composition-taxonomy = taxonomy.xml
-composition-services = services-output.xml
+#composition-task     = problem.xml
+#composition-taxonomy = taxonomy.xml
+#composition-services = services-output.xml
+
+composition-task     = test_problem.xml
+composition-taxonomy = test_taxonomy.xml
+composition-services = test_serv.xml
+
 overlap-enabled      = false
 overlap-percentage   = 0.3
 running-owls         = false

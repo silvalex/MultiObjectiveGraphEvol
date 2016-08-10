@@ -60,7 +60,7 @@ public class GraphMutationPipeline extends BreedingPipeline {
 
             if (selected.getName().equals( "start" )) {
                 // Create an entirely new graph
-                graph = species.createNewGraph( null, state, init.startNode.clone(), init.endNode.clone(), init.relevant );
+                graph = species.createNewGraph( null, state, init.startNode.clone(), init.endNode.clone(), init.relevant, thread );
             }
             else {
 
@@ -72,7 +72,6 @@ public class GraphMutationPipeline extends BreedingPipeline {
                 // Remove nodes and edges
                 for (Node node : nodesToRemove) {
                     graph.nodeMap.remove( node.getName() );
-                    graph.considerableNodeMap.remove( node.getName() );
 
                     for (Edge e : node.getIncomingEdgeList()) {
                         edgesToRemove.add( e );
@@ -86,7 +85,6 @@ public class GraphMutationPipeline extends BreedingPipeline {
 
                 for (Edge edge : edgesToRemove) {
                     graph.edgeList.remove( edge );
-                    graph.considerableEdgeList.remove( edge );
                 }
 
 
@@ -118,7 +116,7 @@ public class GraphMutationPipeline extends BreedingPipeline {
 
                 Collections.shuffle(candidateList, init.random);
                 Map<String,Edge> connections = new HashMap<String,Edge>();
-                graph.unused = unused;
+                //graph.unused = unused;
 
                 // Continue constructing graph
                 species.finishConstructingGraph( currentEndInputs, newEnd, candidateList, connections, init,

@@ -25,15 +25,14 @@ public class GraphSpecies extends Species {
 	@Override
 	public Individual newIndividual(EvolutionState state, int thread) {
 	    GraphInitializer init = (GraphInitializer) state.initializer;
-	    GraphIndividual graph = createNewGraph(null, state, init.startNode.clone(), init.endNode.clone(), init.relevant);
-		return graph;
+	    GraphIndividual graph = createNewGraph(null, state, init.startNode.clone(), init.endNode.clone(), init.relevant, thread);
+	    return graph;
 	}
 
-	public GraphIndividual createNewGraph(GraphIndividual mergedGraph, EvolutionState state, Node start, Node end, Set<Node> relevant) {
+	public GraphIndividual createNewGraph(GraphIndividual mergedGraph, EvolutionState state, Node start, Node end, Set<Node> relevant, int thread) {
 		GraphInitializer init = (GraphInitializer) state.initializer;
-		Set<Node> unused = new HashSet<Node>(init.relevant);
 
-		GraphIndividual newGraph = new GraphIndividual(unused);
+		GraphIndividual newGraph = (GraphIndividual) super.newIndividual(state, thread);
 
 		Set<String> currentEndInputs = new HashSet<String>();
 		Map<String,Edge> connections = new HashMap<String,Edge>();
@@ -42,7 +41,6 @@ public class GraphSpecies extends Species {
 		connectCandidateToGraphByInputs(start, connections, newGraph, currentEndInputs, init);
 
 		Set<Node> seenNodes = new HashSet<Node>();
-		//Set<Node> relevant = init.relevant;
 		List<Node> candidateList = new ArrayList<Node>();
 
 		if (mergedGraph != null)
@@ -177,9 +175,7 @@ public class GraphSpecies extends Species {
 	public void connectCandidateToGraphByInputs(Node candidate, Map<String,Edge> connections, GraphIndividual graph, Set<String> currentEndInputs, GraphInitializer init) {
 
 		graph.nodeMap.put(candidate.getName(), candidate);
-		graph.considerableNodeMap.put(candidate.getName(), candidate);
 		graph.edgeList.addAll(connections.values());
-		graph.considerableEdgeList.addAll(connections.values());
 		candidate.getIncomingEdgeList().addAll(connections.values());
 
 		for (Edge e : connections.values()) {
@@ -189,7 +185,6 @@ public class GraphSpecies extends Species {
 		for (String o : candidate.getOutputs()) {
 			currentEndInputs.addAll(init.taxonomyMap.get(o).endNodeInputs);
 		}
-		graph.unused.remove(candidate);
 	}
 
 	public void appendCandidateToGraphByInputs(Node candidate, Map<String,Edge> connections, GraphIndividual graph) {
@@ -201,7 +196,6 @@ public class GraphSpecies extends Species {
 			Node fromNode = graph.nodeMap.get(e.getFromNode().getName());
 			fromNode.getOutgoingEdgeList().add(e);
 		}
-		graph.unused.remove(candidate);
 	}
 
 	public void appendCandidateToGraphByOutputs(Node candidate, Map<String,Edge> connections, GraphIndividual graph) {
@@ -213,7 +207,6 @@ public class GraphSpecies extends Species {
 			Node toNode = graph.nodeMap.get(e.getToNode().getName());
 			toNode.getIncomingEdgeList().add(e);
 		}
-		graph.unused.remove(candidate);
 	}
 
 	public void addToCandidateList(Node n, Set<Node> seenNode, Set<Node> relevant, List<Node> candidateList, GraphInitializer init) {
@@ -299,7 +292,6 @@ public class GraphSpecies extends Species {
             if (!n.getName().equals( "start" ) && !n.getName().equals( "end" )){
                 Node newN = n.clone();
                 graph.nodeMap.put( newN.getName(), newN );
-                graph.considerableNodeMap.put( newN.getName(), newN );
             }
         }
 
@@ -335,7 +327,6 @@ public class GraphSpecies extends Species {
             // Connect it to graph
             for (Edge e : connections.values()) {
                 graph.edgeList.add(e);
-                graph.considerableEdgeList.add(e);
                 e.getFromNode().getOutgoingEdgeList().add(e);
                 e.getToNode().getIncomingEdgeList().add(e);
             }
@@ -352,7 +343,6 @@ public class GraphSpecies extends Species {
             // Connect it to graph
             for (Edge e : connections.values()) {
                 graph.edgeList.add(e);
-                graph.considerableEdgeList.add(e);
                 e.getFromNode().getOutgoingEdgeList().add(e);
                 e.getToNode().getIncomingEdgeList().add(e);
             }
@@ -368,7 +358,6 @@ public class GraphSpecies extends Species {
         destGraph.nodeMap.get( e.getToNode().getName() ).getIncomingEdgeList().add(newE);
 
         destGraph.edgeList.add(newE);
-        destGraph.considerableEdgeList.add(newE);
     }
 
     public Set<Node> selectNodes(Node root, int numNodes) {
@@ -445,42 +434,6 @@ public class GraphSpecies extends Species {
             }
         }
         //System.out.println("----------------------------------------------1");
-        return true;
-    }
-
-    public boolean structureValidator2( GraphIndividual graph ) {
-        for ( Edge e : graph.considerableEdgeList ) {
-            Node fromNode = graph.considerableNodeMap.get( e.getFromNode().getName());
-
-            boolean isContained = false;
-            for ( Edge outEdge : fromNode.getOutgoingEdgeList() ) {
-                if ( e == outEdge ) {
-                    isContained = true;
-                    break;
-                }
-            }
-
-            if ( !isContained ) {
-                System.out.println( "Considerable: Outgoing edge for node " + fromNode.getName() + " not detected." );
-                return false;
-            }
-
-            Node toNode = graph.considerableNodeMap.get( e.getToNode().getName());
-
-            isContained = false;
-            for ( Edge inEdge : toNode.getIncomingEdgeList() ) {
-                if ( e == inEdge ) {
-                    isContained = true;
-                    break;
-                }
-            }
-
-            if ( !isContained ) {
-                System.out.println( "Considerable: Incoming edge for node " + toNode.getName() + " not detected." );
-                return false;
-            }
-        }
-        //System.out.println("----------------------------------------------2");
         return true;
     }
 
@@ -563,5 +516,9 @@ public class GraphSpecies extends Species {
 
     	}
     	return true;
+    }
+    
+    public void setup(final EvolutionState state, final Parameter base){
+    	super.setup(state, base);
     }
 }

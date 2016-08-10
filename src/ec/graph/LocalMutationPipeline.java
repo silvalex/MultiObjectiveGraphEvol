@@ -82,7 +82,7 @@ public class LocalMutationPipeline extends BreedingPipeline {
             // Generate the new subgraph
             Set<Node> nodesToConsider = new HashSet<Node>(init.relevant);
             nodesToConsider.removeAll(graph.nodeMap.values());
-            GraphIndividual subgraph = species.createNewGraph( null, state, localStartNode, localEndNode, nodesToConsider );
+            GraphIndividual subgraph = species.createNewGraph( null, state, localStartNode, localEndNode, nodesToConsider, thread );
 
             // Add the new subgraph into the existing candidate
             species.fitMutatedSubgraph(init, graph, subgraph, disconnectedInput, disconnectedOutput);
@@ -119,7 +119,6 @@ public class LocalMutationPipeline extends BreedingPipeline {
         // Remove nodes
         for (Node node : mutationNodes) {
             graph.nodeMap.remove( node.getName() );
-            graph.considerableNodeMap.remove( node.getName() );
 
             for (Edge e : node.getIncomingEdgeList()) {
                 mutationEdges.add( e );
@@ -133,8 +132,7 @@ public class LocalMutationPipeline extends BreedingPipeline {
 
         // Remove edges, and figure out what the required inputs and outputs are
         for (Edge edge : mutationEdges) {
-            graph.edgeList.remove( edge );
-            graph.considerableEdgeList.remove( edge );
+            graph.edgeList.remove( edge );            
 
             // If the edge is coming from a service that has not been deleted, add its values as available inputs
             if(graph.nodeMap.containsKey( edge.getFromNode().getName())){

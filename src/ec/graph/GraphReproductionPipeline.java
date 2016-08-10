@@ -21,7 +21,6 @@ public class GraphReproductionPipeline extends ReproductionPipeline {
             GraphIndividual graph = (GraphIndividual)inds[q];
             init.countGraphElements( graph );
         }
-        
         return super.produce(min, max, start, subpopulation, inds, state, thread);
     }
 }

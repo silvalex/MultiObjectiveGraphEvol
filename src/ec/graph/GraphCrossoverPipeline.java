@@ -82,17 +82,9 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
         		GraphIndividual g1Beginning = new GraphIndividual(), g1End = new GraphIndividual(), g2Beginning = new GraphIndividual(), g2End = new GraphIndividual();
         		Map<Node, Set<String>> endLayer1 = severGraph(g1, g1Beginning, g1End, disconnectedInput1, species);
         		Map<Node, Set<String>> endLayer2 = severGraph(g2, g2Beginning, g2End, disconnectedInput2, species);
-        		if (!species.structureValidator3( g1Beginning ))
-        		    System.out.println();
-        		if (!species.structureValidator3( g1End ))
-        		    System.out.println();
-        		if (!species.structureValidator3( g2Beginning ))
-        		    System.out.println();
-        		if (!species.structureValidator3( g2End ))
-        		    System.out.println();
 
-        		GraphIndividual child1 = connectGraphHalves(state, init, species, g1Beginning, g2End, endLayer2); // Create first child
-        		GraphIndividual child2 = connectGraphHalves(state, init, species, g2Beginning, g1End, endLayer1); // Create second child
+        		GraphIndividual child1 = connectGraphHalves(state, init, species, g1Beginning, g2End, endLayer2, thread); // Create first child
+        		GraphIndividual child2 = connectGraphHalves(state, init, species, g2Beginning, g1End, endLayer1, thread); // Create second child
 
         		// Incorporate children into population, after having removed any dangling nodes
         		init.removeDanglingNodes( child1 );
@@ -133,15 +125,11 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
              else {
 	             // Add current node and associated edges to graphBeginning
 	             graphBeginning.nodeMap.put(current.getName(),current);
-	             graphBeginning.considerableNodeMap.put(current.getName(), current);
 	             graphBeginning.edgeList.addAll(current.getOutgoingEdgeList());
-	             graphBeginning.considerableEdgeList.addAll(current.getOutgoingEdgeList());
 
 	             // Remove current node and associated edges from graphEnd
 	             graphEnd.nodeMap.remove(current.getName());
-	             graphEnd.considerableNodeMap.remove(current.getName());
 	             graphEnd.edgeList.removeAll(current.getOutgoingEdgeList());
-	             graphEnd.considerableEdgeList.removeAll(current.getOutgoingEdgeList());
 
 	             // Add next nodes to the queue
 	             for(Edge e : current.getOutgoingEdgeList()){
@@ -168,7 +156,7 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
         	// If edge leads to a node not in graph beginning, delete it from graph
         	if (!graphBeginning.nodeMap.containsKey(current.getToNode().getName())){
         		it.remove();
-        		graphBeginning.considerableEdgeList.remove(current);
+        		graphBeginning.edgeList.remove(current);
 
         		// Remove it from the origin node
         		current.getFromNode().getOutgoingEdgeList().remove(current);
@@ -188,7 +176,7 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
         return firstLayerEnd;
     }
 
-    private GraphIndividual connectGraphHalves(EvolutionState state, GraphInitializer init, GraphSpecies species, GraphIndividual firstHalf, GraphIndividual secondHalf, Map<Node,Set<String>> secondHalfLayer){
+    private GraphIndividual connectGraphHalves(EvolutionState state, GraphInitializer init, GraphSpecies species, GraphIndividual firstHalf, GraphIndividual secondHalf, Map<Node,Set<String>> secondHalfLayer, int thread){
 
     	// Add both halves to the final graph
         GraphIndividual finalGraph = new GraphIndividual();
@@ -200,7 +188,6 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
 
     		if (graphN == null) {
     			finalGraph.nodeMap.put( n.getName(), n );
-    			finalGraph.considerableNodeMap.put( n.getName(), n );
     		}
     		else {
     		    // If already fulfilled, it is no longer in the secondHalfLayer boundary
@@ -213,7 +200,6 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
             	}
             	
         	    finalGraph.edgeList.add(e);
-        	    finalGraph.considerableEdgeList.add(e);
             }
 
             for(Edge e : n.getOutgoingEdgeList()){
@@ -247,7 +233,6 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
                 
                 if (!finalGraph.edgeList.contains( e )) {
                     finalGraph.edgeList.add(e);
-                    finalGraph.considerableEdgeList.add(e);
                     e.getFromNode().getOutgoingEdgeList().add(e);
                     e.getToNode().getIncomingEdgeList().add(e);
                 }
@@ -265,12 +250,12 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
 
     	// If not completely satisfied, create a subproblem that we solve in order to create the remaining connections
     	 if (!inputsNotSatisfied.isEmpty()) {
-    		 addSubgraph(state, init, species, finalGraph, firstHalfNodes, inputsNotSatisfied);
+    		 addSubgraph(state, init, species, finalGraph, firstHalfNodes, inputsNotSatisfied, thread);
     	}
     	return finalGraph;
     }
 
-    private void addSubgraph(EvolutionState state, GraphInitializer init, GraphSpecies species, GraphIndividual graph, Set<Node> firstHalfNodes, Map<Node, Set<String>> inputsNotSatisfied) {
+    private void addSubgraph(EvolutionState state, GraphInitializer init, GraphSpecies species, GraphIndividual graph, Set<Node> firstHalfNodes, Map<Node, Set<String>> inputsNotSatisfied, int thread) {
     	double[] mockQos = new double[4];
         mockQos[GraphInitializer.TIME] = 0;
         mockQos[GraphInitializer.COST] = 0;
@@ -295,7 +280,7 @@ public class GraphCrossoverPipeline extends BreedingPipeline {
    		// Generate the new subgraph
        Set<Node> nodesToConsider = new HashSet<Node>(init.relevant);
        nodesToConsider.removeAll(graph.nodeMap.values());
-       GraphIndividual subgraph = species.createNewGraph( null, state, localStartNode, localEndNode, nodesToConsider );
+       GraphIndividual subgraph = species.createNewGraph( null, state, localStartNode, localEndNode, nodesToConsider, thread );
 
        // Fit subgraph into main graph
        species.fitMutatedSubgraph(init, graph, subgraph, inputsNotSatisfied, firstHalfNodes);
