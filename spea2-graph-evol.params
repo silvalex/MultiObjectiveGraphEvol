@@ -1,0 +1,65 @@
+parent.0 = @ec.multiobjective.spea2.SPEA2Breeder spea2.params
+parent.1 = @ec.gp.koza.KozaBuilder koza.params
+
+
+eval.problem  = ec.graph.GraphEvol
+init		  = ec.graph.GraphInitializer
+
+eval		 = ec.multiobjective.spea2.SPEA2Evaluator
+breed        = ec.multiobjective.spea2.SPEA2Breeder
+pop.subpop.0.species.fitness = ec.multiobjective.spea2.SPEA2MultiObjectiveFitness
+
+pop.subpop.0.size = 500
+generations		        = 51
+pop.subpop.0.species = ec.graph.GraphSpecies
+pop.subpop.0.species.ind = ec.graph.GraphIndividual
+seed.0 = 1
+
+multi.fitness.num-objectives = 4
+multi.fitness.min.0 = 0.0
+multi.fitness.max.0 = 1.0
+multi.fitness.min.1 = 0.0
+multi.fitness.max.1 = 1.0
+multi.fitness.min.2 = 0.0
+multi.fitness.max.2 = 1.0
+multi.fitness.min.3 = 0.0
+multi.fitness.max.3 = 1.0
+
+multi.fitness.maximize.0 = false
+multi.fitness.maximize.1 = false
+multi.fitness.maximize.2 = true
+multi.fitness.maximize.3 = true
+
+pop.subpop.0.species.pipe                      = ec.breed.MultiBreedingPipeline
+pop.subpop.0.species.pipe.num-sources          = 3
+pop.subpop.0.species.pipe.source.0             = ec.graph.GraphMergePipeline
+pop.subpop.0.species.pipe.source.0.prob        = 0.8
+pop.subpop.0.species.pipe.source.0.num-sources = 2
+pop.subpop.0.species.pipe.source.1             = ec.graph.GraphMutationPipeline
+pop.subpop.0.species.pipe.source.1.prob        = 0.1
+pop.subpop.0.species.pipe.source.1.num-sources = 1
+pop.subpop.0.species.pipe.source.2             = ec.graph.GraphReproductionPipeline
+pop.subpop.0.species.pipe.source.2.prob        = 0.1
+pop.subpop.0.species.pipe.source.2.num-sources = 1
+pop.subpop.0.species.pipe.source.0.source.0	   = ec.select.TournamentSelection
+pop.subpop.0.species.pipe.source.0.source.1	   = ec.select.TournamentSelection
+pop.subpop.0.species.pipe.source.1.source.0	   = ec.select.TournamentSelection
+pop.subpop.0.species.pipe.source.2.source.0	   = ec.select.TournamentSelection
+select.tournament.size                         = 2
+
+#composition-task     = problem.xml
+#composition-taxonomy = taxonomy.xml
+#composition-services = services-output.xml
+
+composition-task     = test_problem.xml
+composition-taxonomy = test_taxonomy.xml
+composition-services = test_serv.xml
+
+overlap-enabled      = false
+overlap-percentage   = 0.3
+running-owls         = false
+find-concepts        = true
+ideal-path-length    = 0
+ideal-num-atomic     = 0
+num-nodes-mutation   = 2
+dynamic-normalisation = false

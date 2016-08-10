@@ -6,7 +6,7 @@ import ec.EvolutionState;
 import ec.Individual;
 import ec.Problem;
 import ec.Subpopulation;
-import ec.multiobjective.nsga2.NSGA2MultiObjectiveFitness;
+import ec.multiobjective.MultiObjectiveFitness;
 import ec.simple.SimpleProblemForm;
 
 public class GraphEvol extends Problem implements SimpleProblemForm {
@@ -59,7 +59,7 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
         objectives[GraphInitializer.TIME] = t;
         objectives[GraphInitializer.COST] = c;
 
-        ((NSGA2MultiObjectiveFitness)ind.fitness).setObjectives(state, objectives);
+        ((MultiObjectiveFitness)ind.fitness).setObjectives(state, objectives);
         ind.evaluated = true;
     }
 
