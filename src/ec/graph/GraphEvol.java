@@ -53,9 +53,9 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
         double t = normaliseTime(ind.time, init);
         double c = normaliseCost(ind.cost, init);
 
-        double[] objectives = new double[4];
-        objectives[GraphInitializer.AVAILABILITY] = a;
-        objectives[GraphInitializer.RELIABILITY] = r;
+        double[] objectives = new double[2];
+        //objectives[GraphInitializer.AVAILABILITY] = a;
+        //objectives[GraphInitializer.RELIABILITY] = r;
         objectives[GraphInitializer.TIME] = t;
         objectives[GraphInitializer.COST] = c;
 
