@@ -7,8 +7,11 @@ import java.util.Map;
 import java.util.Set;
 
 import ec.Individual;
+import ec.multiobjective.nsga2.NSGA2MultiObjectiveFitness;
+import ec.EvolutionState;
 //import ec.multiobjective.nsga2.NSGA2MultiObjectiveFitness;
 import ec.Fitness;
+import ec.util.Code;
 import ec.util.Parameter;
 
 public class GraphIndividual extends Individual {
@@ -78,7 +81,7 @@ public class GraphIndividual extends Individual {
             newToNode.getIncomingEdgeList().add( newE );
         }
     }
-    
+
     @Override
     public GraphIndividual clone() {
     	GraphIndividual g = new GraphIndividual();

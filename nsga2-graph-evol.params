@@ -14,6 +14,8 @@ pop.subpop.0.species = ec.graph.GraphSpecies
 pop.subpop.0.species.ind = ec.graph.GraphIndividual
 seed.0 = 1
 
+stat                    = ec.graph.GraphMultiObjectiveStatistics
+stat.silent.front       = false
 stat.do-time            = true
 
 multi.fitness.num-objectives = 2

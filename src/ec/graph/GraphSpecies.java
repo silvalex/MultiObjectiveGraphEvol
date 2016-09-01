@@ -517,7 +517,7 @@ public class GraphSpecies extends Species {
     	}
     	return true;
     }
-    
+
     public void setup(final EvolutionState state, final Parameter base){
     	super.setup(state, base);
     }

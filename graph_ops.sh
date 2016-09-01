@@ -6,7 +6,7 @@
 #
 # I know I have a directory here so I'll use it as my initial working directory
 #
-#$ -wd /vol/grid-solar/sgeusers/sawczualex 
+#$ -wd /vol/grid-solar/sgeusers/sawczualex
 #
 # End of the setup directives
 #
@@ -21,17 +21,18 @@
 
 DIR_TMP="/local/tmp/sawczualex/$JOB_ID/"
 DIR_HOME="/u/students/sawczualex/"
-DIR_GRID=$DIR_HOME"grid/"
+#DIR_GRID=$DIR_HOME"grid/"
+DIR_GRID="/vol/grid-solar/sgeusers/sawczualex/"
 DIR_WORKSPACE="workspace/"
-DIR_PROGRAM=$DIR_HOME$DIR_WORKSPACE/"GraphEvol/"
+DIR_PROGRAM=$DIR_HOME$DIR_WORKSPACE/"MultiObjectiveGraphEvol/"
 ECJ_JAR=$DIR_HOME$DIR_WORKSPACE/"Library/ecj.23.jar"
 DIR_OUTPUT=$DIR_GRID$2 # Match this argument with dataset name
 
 FILE_JOB_LIST="CURRENT_JOBS.txt"
 FILE_RESULT_PREFIX="out"
-FILE_HISTOGRAM_PREFIX="hist"
+FILE_FRONT_PREFIX="front"
 
-   
+
 mkdir -p $DIR_TMP
 
 # Preliminary test to ensure that the directory has been created successfully.
@@ -50,8 +51,8 @@ echo $JOB_ID >> $DIR_GRID$FILE_JOB_LIST
 
 # Copy the files required for processing into the temporary directory.
 cp -r $DIR_PROGRAM"bin" $DIR_TMP
-cp $DIR_PROGRAM"graph-evol.params" $DIR_TMP
-cp $DIR_PROGRAM"graph-evol-newops.params" $DIR_TMP
+cp $DIR_PROGRAM"nsga2-graph-evol.params" $DIR_TMP
+cp $DIR_PROGRAM"spea2-graph-evol.params" $DIR_TMP
 cp $ECJ_JAR $DIR_TMP
 cp $1/* $DIR_TMP # Copy datasets
 
@@ -63,11 +64,11 @@ echo "Running: "
 
 seed=$SGE_TASK_ID
 result=$FILE_RESULT_PREFIX$seed.stat
-hist_result=$FILE_HISTOGRAM_PREFIX$seed.stat
+front=$FILE_FRONT_PREFIX$seed.stat
 
-java -cp ecj.23.jar:./bin:. ec.Evolve -file $3 -p seed.0=$seed -p stat.file=\$$result -p stat.histogram=\$$hist_result
+java -cp ecj.23.jar:./bin:. ec.Evolve -file $3 -p seed.0=$seed -p stat.file=\$$result -p stat.front=\$$front
 cp $result ./results
-cp $hist_result ./results
+cp $front ./results
 
 # Now we move the output to a place to pick it up from later and clean up
 cd results
@@ -83,6 +84,9 @@ rm -rf /local/tmp/sawczualex/$JOB_ID
 FILE_TMP=`date +%N`
 grep -v "$JOB_ID" $DIR_GRID$FILE_JOB_LIST > $DIR_GRID$FILE_TMP
 mv $DIR_GRID$FILE_TMP $DIR_GRID$FILE_JOB_LIST
+
+#Remove output file produced by grid
+rm *.o$JOB_ID
 
 # Finish the job.
 echo "Ran through OK"
