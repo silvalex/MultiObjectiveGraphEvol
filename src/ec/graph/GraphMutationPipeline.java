@@ -40,7 +40,7 @@ public class GraphMutationPipeline extends BreedingPipeline {
 
         if (!(inds[start] instanceof GraphIndividual))
             // uh oh, wrong kind of individual
-            state.output.fatal("GraphAppendPipeline didn't get a GraphIndividual. The offending individual is in subpopulation "
+            state.output.fatal("GraphMutationPipeline didn't get a GraphIndividual. The offending individual is in subpopulation "
             + subpopulation + " and it's:" + inds[start]);
 
         // Perform mutation
@@ -120,7 +120,7 @@ public class GraphMutationPipeline extends BreedingPipeline {
 
                 // Continue constructing graph
                 species.finishConstructingGraph( currentEndInputs, newEnd, candidateList, connections, init,
-                        graph, null, seenNodes, relevant );
+                        graph, null, seenNodes, relevant, true );
 
             }
             graph.evaluated=false;

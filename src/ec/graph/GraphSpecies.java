@@ -50,13 +50,13 @@ public class GraphSpecies extends Species {
 
 		Collections.shuffle(candidateList, init.random);
 
-		finishConstructingGraph(currentEndInputs, end, candidateList, connections, init, newGraph, mergedGraph, seenNodes, relevant);
+		finishConstructingGraph(currentEndInputs, end, candidateList, connections, init, newGraph, mergedGraph, seenNodes, relevant, true);
 
 		return newGraph;
 	}
 
 	public void finishConstructingGraph(Set<String> currentEndInputs, Node end, List<Node> candidateList, Map<String,Edge> connections,
-	        GraphInitializer init, GraphIndividual newGraph, GraphIndividual mergedGraph, Set<Node> seenNodes, Set<Node> relevant) {
+	        GraphInitializer init, GraphIndividual newGraph, GraphIndividual mergedGraph, Set<Node> seenNodes, Set<Node> relevant, boolean shuffleCandidates) {
 
 	 // While end cannot be connected to graph
 		while(!checkCandidateNodeSatisfied(init, connections, newGraph, end, end.getInputs(), null)){
@@ -89,7 +89,8 @@ public class GraphSpecies extends Species {
             }
 
             candidateList.remove(index);
-            Collections.shuffle(candidateList, init.random);
+            if (shuffleCandidates)
+            	Collections.shuffle(candidateList, init.random);
         }
 
         connectCandidateToGraphByInputs(end, connections, newGraph, currentEndInputs, init);

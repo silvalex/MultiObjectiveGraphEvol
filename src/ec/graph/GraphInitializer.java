@@ -23,6 +23,7 @@ import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
 
 import ec.EvolutionState;
+import ec.Individual;
 import ec.Population;
 import ec.Subpopulation;
 import ec.simple.SimpleInitializer;
@@ -43,6 +44,8 @@ public class GraphInitializer extends SimpleInitializer {
 	public Node startNode;
 	public Node endNode;
 	public GraphRandom random;
+	public static List<GraphIndividual[][]> rankInformation = new ArrayList<GraphIndividual[][]>();
+	public static int higherCandidates;
 
 	public double minAvailability = 0.0;
 	public double maxAvailability = -1.0;
@@ -94,6 +97,7 @@ public class GraphInitializer extends SimpleInitializer {
 		Parameter numNodesMutationParam = new Parameter("num-nodes-mutation");
 		Parameter histogramLogNameParam = new Parameter("stat.histogram");
 		Parameter dynamicNormalisationParam = new Parameter("dynamic-normalisation");
+		Parameter higherCandidatesParam = new Parameter("higher-candidates");
 
 		dynamicNormalisation = state.parameters.getBoolean(dynamicNormalisationParam, null, false);
 	    overlapEnabled = state.parameters.getBoolean( overlapEnabledParam, null, false );
@@ -103,6 +107,7 @@ public class GraphInitializer extends SimpleInitializer {
 		findConcepts = state.parameters.getBoolean( findConceptsParam, null, false );
 		numNodesMutation = state.parameters.getInt( numNodesMutationParam, null );
 		histogramLogFile = state.parameters.getFile( histogramLogNameParam, null );
+		higherCandidates = state.parameters.getInt(higherCandidatesParam, null);
 
 		int numGens = state.parameters.getInt(new Parameter("generations"), null);
 		meanAvailPerGen = new double[numGens];

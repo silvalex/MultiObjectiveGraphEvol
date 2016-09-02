@@ -4,9 +4,9 @@ parent.1 = @ec.gp.koza.KozaBuilder koza.params
 eval.problem  = ec.graph.GraphEvol
 init		  = ec.graph.GraphInitializer
 
-eval		 = ec.multiobjective.nsga2.NSGA2Evaluator
+eval		 = ec.graph.GraphNSGA2Evaluator
 breed        = ec.multiobjective.nsga2.NSGA2Breeder
-pop.subpop.0.species.fitness = ec.multiobjective.nsga2.NSGA2MultiObjectiveFitness
+pop.subpop.0.species.fitness = ec.graph.GraphNSGA2MultiObjectiveFitness
 
 pop.subpop.0.size = 500
 generations		        = 51
