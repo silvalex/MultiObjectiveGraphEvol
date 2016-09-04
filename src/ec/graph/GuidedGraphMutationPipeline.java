@@ -60,7 +60,7 @@ public class GuidedGraphMutationPipeline extends BreedingPipeline {
             		lowestObjective = i;
             	}
             }
-
+            
             // Retrieve ranking for that front (i.e. rank) and objective
             GraphIndividual[] ranking = init.rankInformation.get(fit.rank)[lowestObjective];
             Set<String> sharedNodes = new HashSet<String>();
@@ -101,21 +101,21 @@ public class GuidedGraphMutationPipeline extends BreedingPipeline {
             Set<String> currentEndInputs = new HashSet<String>();
             Node newEnd = init.endNode.clone();
 
-            // TODO: Elsewhere, remember to clear out ranking info post-breeding
-
-            // Add start node to the graph XXX
-
-            // Add shared nodes to the beginning of the candidate queue before starting building process XXX
+            // Add start node to the graph
+            Map<String,Edge> connections = new HashMap<String,Edge>();
+    		species.connectCandidateToGraphByInputs(init.startNode.clone(), connections, newGraph, currentEndInputs, init);
+            
+            // Add shared nodes to the beginning of the candidate queue before starting building process
             for (String nodeName : sharedNodes) {
             	candidateList.add(init.serviceMap.get(nodeName));
-
             }
 
-            // Then add nodes of the original graph to list of candidates XXX
-
-
-            Collections.shuffle(candidateList, init.random);
-            Map<String,Edge> connections = new HashMap<String,Edge>();
+            // Then add nodes of the original graph to list of candidates
+            for (String nodeName : graph.nodeMap.keySet()) {
+            	if (!nodeName.equals("start") && !nodeName.equals("end")) {
+            		candidateList.add(init.serviceMap.get(nodeName));
+            	}
+            }
 
             // Continue constructing graph
             species.finishConstructingGraph( currentEndInputs, newEnd, candidateList, connections, init,
@@ -126,19 +126,4 @@ public class GuidedGraphMutationPipeline extends BreedingPipeline {
         }
         return n;
 	}
-
-	private Set<Node> findNodesToRemove(Node selected) {
-	    Set<Node> nodes = new HashSet<Node>();
-	    _findNodesToRemove(selected, nodes);
-	    return nodes;
-
-	}
-
-	private void _findNodesToRemove(Node current, Set<Node> nodes) {
-        nodes.add( current );
-        for (Edge e: current.getOutgoingEdgeList()) {
-            _findNodesToRemove(e.getToNode(), nodes);
-        }
-	}
-
 }

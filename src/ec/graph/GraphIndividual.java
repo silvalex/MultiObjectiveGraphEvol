@@ -86,7 +86,10 @@ public class GraphIndividual extends Individual {
     public GraphIndividual clone() {
     	GraphIndividual g = new GraphIndividual();
     	g.species = this.species;
-    	g.fitness = (Fitness) g.species.f_prototype.clone();
+    	if (this.fitness == null)
+    		g.fitness = (Fitness) g.species.f_prototype.clone();
+    	else
+    		g.fitness = (Fitness) this.fitness.clone();
     	copyTo(g);
     	return g;
     }

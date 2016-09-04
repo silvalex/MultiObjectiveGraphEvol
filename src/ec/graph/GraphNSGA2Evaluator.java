@@ -3,6 +3,7 @@ package ec.graph;
 import java.util.ArrayList;
 
 import ec.EvolutionState;
+import ec.Fitness;
 import ec.Individual;
 import ec.multiobjective.nsga2.NSGA2Breeder;
 import ec.multiobjective.nsga2.NSGA2Evaluator;
@@ -15,6 +16,9 @@ public class GraphNSGA2Evaluator extends NSGA2Evaluator {
 
 	@Override
 	public Individual[] buildArchive(EvolutionState state, int subpop) {
+		// Clear the stored ranking information before starting the new sorting process XXX
+		GraphInitializer.rankInformation.clear();
+		
 		Individual[] dummy = new Individual[0];
 		ArrayList ranks = assignFrontRanks(state.population.subpops[subpop]);
 
@@ -70,7 +74,7 @@ public class GraphNSGA2Evaluator extends NSGA2Evaluator {
 		for (int i = 0; i < front.length; i++)
 			((NSGA2MultiObjectiveFitness) front[i].fitness).sparsity = 0;
 
-		// Create structure for storing the ordering for this rank, and add it to the initializer // XXX
+		// Create structure for storing the ordering for this rank, and add it to the initializer //XXX
 		GraphIndividual[][] ordering = new GraphIndividual[numObjectives][front.length];
 		GraphInitializer.rankInformation.add(rankNo, ordering);
 
@@ -104,7 +108,9 @@ public class GraphNSGA2Evaluator extends NSGA2Evaluator {
 			for (int j = 0; j < front.length; j++) {
 				GraphIndividual ind = (GraphIndividual)front[j];
 				((GraphNSGA2MultiObjectiveFitness)ind.fitness).objRankings[i] = j;
+				// Clone individual, but also the fitness
 				ordering[i][j] = ind.clone();
+				ordering[i][j].fitness = (Fitness) ind.fitness.clone();
 			}
 
 			// Compute and assign sparsity.
