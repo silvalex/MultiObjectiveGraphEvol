@@ -136,19 +136,15 @@ public class GraphMultiObjectiveStatistics extends MultiObjectiveStatistics {
 
 		double[] objectives = f.getObjectives();
 
-//		builder.append(objectives[GraphInitializer.AVAILABILITY]);
-//		builder.append(" ");
-//		builder.append(objectives[GraphInitializer.RELIABILITY]);
-//		builder.append(" ");
-		builder.append(objectives[GraphInitializer.TIME]);
+		builder.append(objectives[0]);
 		builder.append(" ");
-		builder.append(objectives[GraphInitializer.COST]);
+		builder.append(objectives[1]);
 		builder.append(" ");
 
-		// builder.append(ind.availability);
-		// builder.append(" ");
-		// builder.append(ind.reliability);
-		// builder.append(" ");
+		builder.append(ind.availability);
+		builder.append(" ");
+		builder.append(ind.reliability);
+		builder.append(" ");
 		builder.append(ind.time);
 		builder.append(" ");
 		builder.append(ind.cost);
