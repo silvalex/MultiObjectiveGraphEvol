@@ -56,8 +56,10 @@ public class GraphEvol extends Problem implements SimpleProblemForm {
         double[] objectives = new double[2];
         //objectives[GraphInitializer.AVAILABILITY] = a;
         //objectives[GraphInitializer.RELIABILITY] = r;
-        objectives[GraphInitializer.TIME] = t;
-        objectives[GraphInitializer.COST] = c;
+        //objectives[GraphInitializer.TIME] = t;
+        //objectives[GraphInitializer.COST] = c;
+        objectives[0] = t + c;
+        objectives[1] = a + r;
 
         ((MultiObjectiveFitness)ind.fitness).setObjectives(state, objectives);
         ind.evaluated = true;
