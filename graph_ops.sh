@@ -10,85 +10,115 @@
 #
 # End of the setup directives
 #
+# Now let's do something useful, but first change into the job-specific directory that should
+#  have been created for us
+#
+# Check we have somewhere to work now and if we don't, exit nicely.
+#
+
+if [ -d /local/tmp/sawczualex/$JOB_ID.$SGE_TASK_ID ]; then
+        cd /local/tmp/sawczualex/$JOB_ID.$SGE_TASK_ID
+else
+        echo "Uh oh ! There's no job directory to change into "
+        echo "Something is broken. I should inform the programmers"
+        echo "Save some information that may be of use to them"
+        echo "Here's LOCAL TMP "
+        ls -la /local/tmp
+        echo "AND LOCAL TMP SAWCZUALEX "
+        ls -la /local/tmp/sawczualex
+        echo "Exiting"
+        exit 1
+fi
+
+#
+# Now we are in the job-specific directory so now can do something useful
+#
 # Stdout from programs and shell echos will go into the file
 #    scriptname.o$JOB_ID
 #  so we'll put a few things in there to help us see what went on
 #
 
-# For testing locally
-#JOB_ID=3
-#SGE_TASK_ID=1
+echo ==UNAME==
+uname -n
+echo ==WHO AM I and GROUPS==
+id
+groups
+echo ==SGE_O_WORKDIR==
+echo $SGE_O_WORKDIR
+echo ==/LOCAL/TMP==
+ls -ltr /local/tmp/
+echo ==/VOL/GRID-SOLAR==
+ls -l /vol/grid-solar/sgeusers/
 
-DIR_TMP="/local/tmp/sawczualex/$JOB_ID/"
+#
+# OK, where are we starting from and what's the environment we're in
+#
+echo ==RUN HOME==
+pwd
+ls
+echo ==ENV==
+env
+echo ==SET==
+set
+#
+echo == WHATS IN LOCAL/TMP ON THE MACHINE WE ARE RUNNING ON ==
+ls -ltra /local/tmp | tail
+#
+echo == WHATS IN LOCAL TMP FRED JOB_ID AT THE START==
+ls -la
+
+# -----------------------------------
+
+#
+# Initialise path variables
+#
+
 DIR_HOME="/u/students/sawczualex/"
-#DIR_GRID=$DIR_HOME"grid/"
 DIR_GRID="/vol/grid-solar/sgeusers/sawczualex/"
 DIR_WORKSPACE="workspace/"
 DIR_PROGRAM=$DIR_HOME$DIR_WORKSPACE/"MultiObjectiveGraphEvol/"
 ECJ_JAR=$DIR_HOME$DIR_WORKSPACE/"Library/ecj.23.jar"
-DIR_OUTPUT=$DIR_GRID$2 # Match this argument with dataset name
+DIR_OUTPUT=$DIR_GRID$2 # Name of directory containing output
 
 FILE_JOB_LIST="CURRENT_JOBS.txt"
 FILE_RESULT_PREFIX="out"
 FILE_FRONT_PREFIX="front"
 
 
-mkdir -p $DIR_TMP
+#
+# Copy the input files to the local directory
+#
 
-# Preliminary test to ensure that the directory has been created successfully.
-if [ ! -d $DIR_TMP ]; then
-  echo "Could not create the temporary directory for processing the job. "
-  echo "/local/tmp/ directory: "
-  ls -la /local/tmp
-  echo "/local/tmp/sawczualex directory: "
-  ls -la /local/tmp/sawczualex
-  echo "Exiting"
-  exit 1
-fi
+cp $DIR_PROGRAM"program.jar" .
+cp $DIR_PROGRAM"nsga2-graph-evol.params" .
+cp $ECJ_JAR .
+cp $1/* . # Copy datasets
 
-# Add the job ID to the list of jobs currently being processed.
-echo $JOB_ID >> $DIR_GRID$FILE_JOB_LIST
+echo ==WHATS THERE HAVING COPIED STUFF OVER AS INPUT==
+ls -la
 
-# Copy the files required for processing into the temporary directory.
-cp -r $DIR_PROGRAM"bin" $DIR_TMP
-cp $DIR_PROGRAM"nsga2-graph-evol.params" $DIR_TMP
-cp $DIR_PROGRAM"spea2-graph-evol.params" $DIR_TMP
-cp $ECJ_JAR $DIR_TMP
-cp $1/* $DIR_TMP # Copy datasets
-
-mkdir -p $DIR_TMP"results"
-
-cd $DIR_TMP
-
-echo "Running: "
+#
+# Run the program
+#
 
 seed=$SGE_TASK_ID
 result=$FILE_RESULT_PREFIX$seed.stat
 front=$FILE_FRONT_PREFIX$seed.stat
 
-java -cp ecj.23.jar:./bin:. ec.Evolve -file $3 -p seed.0=$seed -p stat.file=\$$result -p stat.front=\$$front
-cp $result ./results
-cp $front ./results
+java -cp ecj.23.jar:program.jar ec.Evolve -file $3 -p seed.0=$seed -p stat.file=\$$result -p stat.front=\$$front
 
-# Now we move the output to a place to pick it up from later and clean up
-cd results
+echo ==AND NOW, HAVING DONE SOMETHING USEFUL AND CREATED SOME OUTPUT==
+ls -la
+
+# Now we move the output to a place to pick it up from later
 if [ ! -d $DIR_OUTPUT ]; then
   mkdir $DIR_OUTPUT
 fi
-cp $DIR_TMP"results"/*.stat $DIR_OUTPUT
+cp *.stat $DIR_OUTPUT
 
-# Do the cleaning up from our starting directory
-rm -rf /local/tmp/sawczualex/$JOB_ID
+# Also copy over the parameter file, so we preserve the settings
+cp nsga2-graph-evol.params $DIR_OUTPUT
 
-# Remove the job ID from the list of jobs currently being processed.
-FILE_TMP=`date +%N`
-grep -v "$JOB_ID" $DIR_GRID$FILE_JOB_LIST > $DIR_GRID$FILE_TMP
-mv $DIR_GRID$FILE_TMP $DIR_GRID$FILE_JOB_LIST
-
-#Remove output file produced by grid
-rm *.o$JOB_ID
-
-# Finish the job.
 echo "Ran through OK"
 
 
